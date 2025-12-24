@@ -184,13 +184,13 @@ FLOW OVERVIEW:
 
 RESPONSE FORMAT:
 Always respond in JSON format with:
-{
+{{
     "message": "Your conversational message here",
-    "quick_replies": [{"label": "Button Label", "value": "button_value"}],
+    "quick_replies": [{{"label": "Button Label", "value": "button_value"}}],
     "next_agent": "agent_name",
-    "data_collected": {"key": "value"},
+    "data_collected": {{"key": "value"}},
     "show_cards": false
-}
+}}
 
 Current session state: {state}
 User message: {user_message}
