@@ -1118,11 +1118,12 @@ async def generate_pdf_document(session_id: str):
     
     # Vehicle details
     story.append(Paragraph("Vehicle Information", heading_style))
+    vehicle_type = state.get("vehicle_type") or "N/A"
     vehicle_data = [
-        ["Vehicle Type:", state.get("vehicle_type", "N/A").title()],
-        ["Make:", state.get("vehicle_make", "N/A")],
-        ["Model:", state.get("vehicle_model", "N/A")],
-        ["Engine Capacity:", state.get("engine_capacity", "N/A")],
+        ["Vehicle Type:", vehicle_type.title() if vehicle_type != "N/A" else "N/A"],
+        ["Make:", state.get("vehicle_make") or "N/A"],
+        ["Model:", state.get("vehicle_model") or "N/A"],
+        ["Engine Capacity:", state.get("engine_capacity") or "N/A"],
     ]
     
     t = Table(vehicle_data, colWidths=[2*inch, 4*inch])
