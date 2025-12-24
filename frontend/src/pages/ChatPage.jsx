@@ -213,21 +213,21 @@ export const ChatPage = () => {
         </Button>
         
         <img 
+          src={INCOME_LOGO} 
+          alt="Income" 
+          className="h-8"
+        />
+        
+        <div className="flex-1 text-center">
+          <h1 className="font-semibold text-lg font-['Outfit']">Motor Insurance</h1>
+          <p className="text-sm text-white/80">Powered by AI Agents</p>
+        </div>
+
+        <img 
           src={JIFFY_JANE} 
           alt="Jiffy Jane" 
           className="w-12 h-12 rounded-xl bg-white object-cover"
           data-testid="chat-jiffy-avatar"
-        />
-        
-        <div className="flex-1">
-          <h1 className="font-semibold text-lg font-['Outfit']">Jiffy Jane</h1>
-          <p className="text-sm text-white/80">Income Insurance Assistant</p>
-        </div>
-
-        <img 
-          src={INCOME_LOGO} 
-          alt="Income" 
-          className="h-8 opacity-90"
         />
       </header>
 
