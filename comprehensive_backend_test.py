@@ -184,10 +184,10 @@ class ComprehensiveMotorInsuranceTest:
             return False
             
         # Check for coverage comparison cards
-        if 'message' in response and 'cards' in response['message']:
+        if 'message' in response and 'cards' in response['message'] and response['message']['cards']:
             self.log(f"   ✅ Coverage cards present: {len(response['message']['cards'])} cards")
         else:
-            self.log("   ⚠️ No coverage cards in response")
+            self.log("   ⚠️ No coverage cards in response (LLM may not have returned cards format)")
             
         # Step 7: Plan Selection - Drive Premium
         success, response = self.run_test(
