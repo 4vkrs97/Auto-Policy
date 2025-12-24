@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Car, User, Shield, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const FETCH_ITEMS = {
   vehicle: {
     icon: Car,
-    title: "Fetching Vehicle Details",
+    title: "Fetching Vehicle Details from LTA",
     items: [
       { label: "Registration Number", key: "registration" },
       { label: "Make", key: "make" },
@@ -40,33 +40,38 @@ const FETCH_ITEMS = {
   }
 };
 
-export const DataFetchCard = ({ type, data, onComplete }) => {
+export const DataFetchCard = ({ type, data }) => {
   const [completedItems, setCompletedItems] = useState([]);
   const [isComplete, setIsComplete] = useState(false);
+  const indexRef = useRef(0);
+  
   const config = FETCH_ITEMS[type];
-  const Icon = config?.icon || Car;
-
+  
   useEffect(() => {
     if (!config) return;
     
-    let currentIndex = 0;
+    // Reset on mount
+    setCompletedItems([]);
+    setIsComplete(false);
+    indexRef.current = 0;
+    
     const interval = setInterval(() => {
-      if (currentIndex < config.items.length) {
-        setCompletedItems(prev => [...prev, config.items[currentIndex].key]);
-        currentIndex++;
+      if (indexRef.current < config.items.length) {
+        const currentKey = config.items[indexRef.current].key;
+        setCompletedItems(prev => [...prev, currentKey]);
+        indexRef.current += 1;
       } else {
         clearInterval(interval);
         setIsComplete(true);
-        if (onComplete) {
-          setTimeout(onComplete, 500);
-        }
       }
-    }, 400);
+    }, 350);
 
     return () => clearInterval(interval);
-  }, [config, onComplete]);
+  }, [type]); // Only re-run when type changes
 
   if (!config) return null;
+  
+  const Icon = config.icon;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md" data-testid={`fetch-card-${type}`}>
@@ -83,7 +88,7 @@ export const DataFetchCard = ({ type, data, onComplete }) => {
       </div>
       
       <div className="p-4 space-y-2">
-        {config.items.map((item, index) => {
+        {config.items.map((item) => {
           const isLoaded = completedItems.includes(item.key);
           const value = data?.[item.key] || "—";
           
