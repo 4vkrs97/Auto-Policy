@@ -478,67 +478,75 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     # Check for vehicle type selection
     if not state.get("vehicle_type"):
         return {
-            "message": "Hi there! I'm Jiffy Jane, your motor insurance assistant! 🚗 Let's get you covered. Are you looking to insure a car or a motorcycle?",
+            "message": "Hi there! I'm Jiffy Jane, your friendly motor insurance assistant from Income Insurance! Let me help you get a quick quote. What type of vehicle would you like to insure?",
             "quick_replies": [
                 {"label": "🚗 Car", "value": "car"},
                 {"label": "🏍️ Motorcycle", "value": "motorcycle"}
             ],
-            "next_agent": "intake",
+            "next_agent": "orchestrator",
             "data_collected": {}
         }
     
-    # Vehicle type selected, ask for make
-    if state.get("vehicle_type") and not state.get("vehicle_make"):
+    # Vehicle type selected, ask for registration number
+    if state.get("vehicle_type") and not state.get("registration_number"):
         vtype = state.get("vehicle_type")
-        makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
         return {
-            "message": f"Great choice! Which brand is your {vtype}?",
-            "quick_replies": [{"label": m, "value": m} for m in makes[:6]],
-            "next_agent": "intake",
-            "data_collected": {}
-        }
-    
-    # Make selected, ask for model
-    if state.get("vehicle_make") and not state.get("vehicle_model"):
-        make = state.get("vehicle_make")
-        models = VEHICLE_MODELS.get(make, ["Other"])
-        return {
-            "message": f"Nice! What model is your {make}?",
-            "quick_replies": [{"label": m, "value": m} for m in models[:6]],
-            "next_agent": "intake",
-            "data_collected": {}
-        }
-    
-    # Model selected, ask for engine capacity
-    if state.get("vehicle_model") and not state.get("engine_capacity"):
-        vtype = state.get("vehicle_type", "car")
-        capacities = ENGINE_CAPACITIES.get(vtype, ENGINE_CAPACITIES["car"])
-        return {
-            "message": "What's the engine capacity?",
-            "quick_replies": [{"label": c, "value": c} for c in capacities],
-            "next_agent": "intake",
-            "data_collected": {}
-        }
-    
-    # Engine capacity selected, ask for off-peak (cars only) or move to coverage
-    if state.get("engine_capacity") and not state.get("off_peak") and state.get("vehicle_type") == "car":
-        return {
-            "message": "Is your car registered as an off-peak vehicle? (Red plates)",
+            "message": f"Great! I'll help you insure your {vtype}. To speed things up, I can fetch your vehicle details automatically from LTA. Please enter your vehicle registration number (e.g., SGX1234A):",
             "quick_replies": [
-                {"label": "Yes, Off-Peak", "value": "yes"},
-                {"label": "No, Normal", "value": "no"}
+                {"label": "SGX1234A (Demo)", "value": "SGX1234A"},
+                {"label": "SBA5678B (Demo)", "value": "SBA5678B"},
+                {"label": "Enter Manually", "value": "manual_entry"}
             ],
             "next_agent": "intake",
             "data_collected": {}
         }
     
-    # Vehicle info complete, show coverage options
-    if state.get("engine_capacity") and not state.get("coverage_type"):
+    # Registration entered, show fetched vehicle data
+    if state.get("registration_number") and not state.get("vehicle_confirmed"):
+        reg = state.get("registration_number", "SGX1234A")
+        # Get mock LTA data
+        lta_data = MOCK_LTA_DATA.get(reg.upper(), {
+            "make": "Toyota",
+            "model": "Camry", 
+            "engine_cc": "2000cc",
+            "year": 2022,
+            "road_tax_valid": True
+        })
         return {
-            "message": "Excellent! Now let's choose your coverage. Would you prefer Third Party coverage (basic) or Comprehensive coverage (full protection)?",
+            "message": f"🔍 I've retrieved your vehicle details from LTA!",
             "quick_replies": [
-                {"label": "Third Party", "value": "third_party"},
-                {"label": "Comprehensive", "value": "comprehensive"}
+                {"label": "✓ Confirm Details", "value": "confirm_vehicle"},
+                {"label": "Edit Details", "value": "edit_vehicle"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {
+                "vehicle_make": lta_data.get("make", "Toyota"),
+                "vehicle_model": lta_data.get("model", "Camry"),
+                "engine_capacity": lta_data.get("engine_cc", "2000cc"),
+                "vehicle_year": lta_data.get("year", 2022)
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "vehicle_fetch",
+                "registration": reg.upper(),
+                "data": {
+                    "registration": reg.upper(),
+                    "make": lta_data.get("make", "Toyota"),
+                    "model": lta_data.get("model", "Camry"),
+                    "engine_cc": lta_data.get("engine_cc", "2000cc"),
+                    "year": str(lta_data.get("year", 2022)),
+                    "road_tax": "Valid" if lta_data.get("road_tax_valid", True) else "Expired"
+                }
+            }]
+        }
+    
+    # Vehicle confirmed, show coverage options
+    if state.get("vehicle_confirmed") and not state.get("coverage_type"):
+        return {
+            "message": "Perfect! Now let's choose the right coverage for you. I recommend Comprehensive coverage for maximum protection.",
+            "quick_replies": [
+                {"label": "Comprehensive", "value": "comprehensive"},
+                {"label": "Third Party Only", "value": "third_party"}
             ],
             "next_agent": "coverage",
             "data_collected": {},
@@ -546,8 +554,262 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "cards": [{
                 "type": "coverage_comparison",
                 "plans": [
-                    {"name": "Third Party", "price": "From $500/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]},
-                    {"name": "Comprehensive", "price": "From $800/year", "features": ["All Third Party benefits", "Own damage coverage", "Theft protection", "Natural disaster coverage"]}
+                    {"name": "Comprehensive", "price": "From $1,200/year", "features": ["Own damage coverage", "Theft protection", "Third party liability", "Personal accident cover", "Natural disaster coverage"], "recommended": True},
+                    {"name": "Third Party", "price": "From $600/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]}
+                ]
+            }]
+        }
+    
+    # Coverage selected, show plan options
+    if state.get("coverage_type") and not state.get("plan_name"):
+        coverage = state.get("coverage_type", "comprehensive").replace("_", " ").title()
+        return {
+            "message": f"Excellent choice! For {coverage} coverage, we have two plans. Drive Premium includes extra benefits like windscreen coverage and 24/7 roadside assistance.",
+            "quick_replies": [
+                {"label": "Drive Premium", "value": "Drive Premium"},
+                {"label": "Drive Classic", "value": "Drive Classic"}
+            ],
+            "next_agent": "coverage",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "plan_comparison",
+                "plans": [
+                    {"name": "Drive Premium", "price": "+20%", "features": ["Coverage limit: $100,000", "24/7 Roadside assistance", "Windscreen coverage: $1,000", "Personal belongings: $2,000", "NCD Protector included"], "recommended": True},
+                    {"name": "Drive Classic", "price": "Base", "features": ["Coverage limit: $50,000", "Business hours support", "Windscreen coverage: $300", "Personal belongings: $500"]}
+                ]
+            }]
+        }
+    
+    # Plan selected, ask about Singpass
+    if state.get("plan_name") and not state.get("driver_info_method"):
+        return {
+            "message": "Great choice! Now I need to verify your identity and driving credentials. Would you like to retrieve your details via Singpass? It's faster and more secure!",
+            "quick_replies": [
+                {"label": "🔐 Use Singpass", "value": "singpass"},
+                {"label": "Enter Manually", "value": "manual"}
+            ],
+            "next_agent": "driver_identity",
+            "data_collected": {}
+        }
+    
+    # Singpass selected, ask for consent
+    if state.get("driver_info_method") == "singpass" and not state.get("singpass_consent"):
+        return {
+            "message": "To retrieve your details from Singpass, I need your consent. By proceeding, you agree to allow Income Insurance to access your personal data from Singpass for insurance purposes, in compliance with PDPA guidelines.",
+            "quick_replies": [
+                {"label": "✓ I Consent", "value": "consent_yes"},
+                {"label": "No, Enter Manually", "value": "consent_no"}
+            ],
+            "next_agent": "driver_identity",
+            "data_collected": {}
+        }
+    
+    # Singpass consent given, retrieve and show data
+    if state.get("singpass_consent") == "consent_yes" and not state.get("driver_confirmed"):
+        mock_data = list(MOCK_SINGPASS_DATA.values())[0]
+        return {
+            "message": f"🔐 Successfully retrieved your details from Singpass!",
+            "quick_replies": [
+                {"label": "✓ Confirm Details", "value": "confirm_driver"},
+                {"label": "Edit Details", "value": "edit_driver"}
+            ],
+            "next_agent": "driver_identity",
+            "data_collected": {
+                "driver_name": mock_data["full_name"],
+                "driver_nric": mock_data["nric"],
+                "driver_dob": mock_data["dob"],
+                "driver_phone": mock_data["phone"],
+                "driver_email": mock_data["email"],
+                "driver_address": mock_data["address"],
+                "license_class": mock_data["driving_license"]["class"]
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "singpass_fetch",
+                "data": {
+                    "name": mock_data["full_name"],
+                    "nric": mock_data["nric"][:5] + "****",
+                    "dob": mock_data["dob"],
+                    "address": mock_data["address"][:30] + "...",
+                    "license": f"Class {mock_data['driving_license']['class']}",
+                    "experience": "18 years"
+                }
+            }]
+        }
+    
+    # Driver confirmed, ask about claims history
+    if state.get("driver_confirmed") and not state.get("claims_history"):
+        return {
+            "message": "Now let me assess your risk profile. Have you made any motor insurance claims in the last 3 years?",
+            "quick_replies": [
+                {"label": "No Claims (NCD eligible)", "value": "no_claims"},
+                {"label": "1 Minor Claim", "value": "1_minor"},
+                {"label": "Multiple Claims", "value": "multiple"}
+            ],
+            "next_agent": "driver_eligibility",
+            "data_collected": {}
+        }
+    
+    # Claims history recorded, ask about additional drivers
+    if state.get("claims_history") and not state.get("additional_drivers"):
+        return {
+            "message": "Would you like to add any additional named drivers to your policy? Adding named drivers can affect your premium.",
+            "quick_replies": [
+                {"label": "No, Just Me", "value": "none"},
+                {"label": "Add 1 Driver", "value": "add_one"},
+                {"label": "Add 2+ Drivers", "value": "add_multiple"}
+            ],
+            "next_agent": "driver_eligibility",
+            "data_collected": {}
+        }
+    
+    # Additional drivers recorded, ask about telematics
+    if state.get("additional_drivers") and not state.get("telematics_consent"):
+        return {
+            "message": "🚗 Would you like to opt-in for our Smart Driver programme? By allowing us to monitor your driving habits through our app, you can save up to 15% on your premium!",
+            "quick_replies": [
+                {"label": "Yes, Save 15%!", "value": "yes"},
+                {"label": "No Thanks", "value": "no"}
+            ],
+            "next_agent": "telematics",
+            "data_collected": {}
+        }
+    
+    # Telematics recorded, calculate and show risk assessment then premium
+    if state.get("telematics_consent") and not state.get("risk_assessed"):
+        # Determine NCD percentage
+        ncd_percent = 0
+        if state.get("claims_history") == "no_claims":
+            ncd_percent = 30
+        elif state.get("claims_history") == "1_minor":
+            ncd_percent = 10
+            
+        risk_level = "Low" if state.get("claims_history") == "no_claims" else ("Medium" if state.get("claims_history") == "1_minor" else "High")
+        
+        return {
+            "message": "🔍 Analyzing your risk profile...",
+            "quick_replies": [
+                {"label": "View My Quote", "value": "view_quote"}
+            ],
+            "next_agent": "risk_assessment",
+            "data_collected": {
+                "risk_assessed": True,
+                "ncd_percent": ncd_percent,
+                "risk_level": risk_level
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "risk_fetch",
+                "data": {
+                    "claims": "0 claims" if state.get("claims_history") == "no_claims" else ("1 minor claim" if state.get("claims_history") == "1_minor" else "Multiple claims"),
+                    "driver_risk": risk_level,
+                    "vehicle_risk": "Low",
+                    "ncd": f"{ncd_percent}% NCD Eligible" if ncd_percent > 0 else "Not eligible",
+                    "rating": risk_level
+                }
+            }]
+        }
+    
+    # Risk assessed, calculate and show premium
+    if state.get("risk_assessed") and not state.get("final_premium"):
+        # Calculate premium
+        base = 1200  # Base for car
+        if state.get("vehicle_type") == "motorcycle":
+            base = 600
+        
+        engine = state.get("engine_capacity", "2000cc")
+        if "2001" in engine or "3000" in engine:
+            base *= 1.3
+        elif "above" in engine.lower() or "3000" in engine:
+            base *= 1.5
+        
+        coverage_mult = 1.0 if state.get("coverage_type") == "third_party" else 1.4
+        plan_mult = 1.2 if state.get("plan_name") == "Drive Premium" else 1.0
+        
+        ncd_percent = state.get("ncd_percent", 0)
+        telematics_percent = 15 if state.get("telematics_consent") == "yes" else 0
+        
+        gross = base * coverage_mult * plan_mult
+        ncd_discount = gross * (ncd_percent / 100)
+        telematics_discount = gross * (telematics_percent / 100)
+        final = gross - ncd_discount - telematics_discount
+        
+        policy_num = f"INC-2024-{str(uuid.uuid4())[:8].upper()}"
+        
+        return {
+            "message": f"🎉 Great news! Based on your profile, here's your personalized quote:",
+            "quick_replies": [
+                {"label": "✓ Accept & Generate Policy", "value": "accept_quote"},
+                {"label": "Modify Quote", "value": "modify"}
+            ],
+            "next_agent": "pricing",
+            "data_collected": {
+                "base_premium": round(base, 2),
+                "gross_premium": round(gross, 2),
+                "ncd_discount": round(ncd_discount, 2),
+                "telematics_discount": round(telematics_discount, 2),
+                "final_premium": round(final, 2),
+                "policy_number": policy_num
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "quote_summary",
+                "plan_name": state.get("plan_name", "Drive Classic"),
+                "coverage_type": state.get("coverage_type", "third_party").replace("_", " ").title(),
+                "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
+                "premium": f"${round(final, 2)}/year",
+                "breakdown": [
+                    {"item": "Base Premium", "amount": f"${round(base, 2)}"},
+                    {"item": f"Coverage ({state.get('coverage_type', 'comprehensive').replace('_', ' ').title()})", "amount": f"+${round(base * (coverage_mult - 1), 2)}" if coverage_mult > 1 else "$0"},
+                    {"item": f"Plan ({state.get('plan_name', 'Classic')})", "amount": f"+${round(base * coverage_mult * (plan_mult - 1), 2)}" if plan_mult > 1 else "$0"},
+                    {"item": f"NCD Discount ({ncd_percent}%)", "amount": f"-${round(ncd_discount, 2)}"},
+                    {"item": f"Smart Driver Discount ({telematics_percent}%)", "amount": f"-${round(telematics_discount, 2)}"},
+                    {"item": "Final Premium", "amount": f"${round(final, 2)}"}
+                ]
+            }]
+        }
+    
+    # Quote accepted, generate policy document
+    if state.get("final_premium"):
+        policy_num = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
+        from datetime import datetime
+        start_date = datetime.now().strftime("%d %b %Y")
+        end_date = (datetime.now().replace(year=datetime.now().year + 1)).strftime("%d %b %Y")
+        
+        return {
+            "message": "🎊 Congratulations! Your policy has been generated successfully. You can review your policy details below and download the PDF document.",
+            "quick_replies": [
+                {"label": "📄 Download PDF", "value": "download_pdf"},
+                {"label": "Start New Quote", "value": "new_quote"}
+            ],
+            "next_agent": "document",
+            "data_collected": {"documents_ready": True},
+            "show_cards": True,
+            "cards": [{
+                "type": "policy_document",
+                "policy_number": policy_num,
+                "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
+                "coverage": state.get("coverage_type", "comprehensive").replace("_", " ").title(),
+                "plan": state.get("plan_name", "Drive Classic"),
+                "premium": f"${state.get('final_premium', 0)}/year",
+                "start_date": start_date,
+                "end_date": end_date,
+                "driver_name": state.get("driver_name", "Tan Ah Kow"),
+                "ncd_percentage": f"{state.get('ncd_percent', 0)}%"
+            }]
+        }
+    
+    # Default fallback
+    return {
+        "message": "I'm here to help! Let me know what you'd like to do.",
+        "quick_replies": [
+            {"label": "Start New Quote", "value": "start"},
+            {"label": "Help", "value": "help"}
+        ],
+        "next_agent": "orchestrator",
+        "data_collected": {}
+    }
                 ]
             }]
         }
