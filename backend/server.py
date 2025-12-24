@@ -192,8 +192,8 @@ Always respond in JSON format with:
     "show_cards": false
 }}
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Based on the current state and user message, provide an appropriate response. Guide the user through the process step by step.
 """
@@ -207,11 +207,11 @@ Your task:
 4. Ask for engine capacity
 5. Ask about off-peak status (for cars only)
 
-Available makes for cars: {car_makes}}
-Available makes for motorcycles: {motorcycle_makes}}
+Available makes for cars: {car_makes}
+Available makes for motorcycles: {motorcycle_makes}
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Respond in JSON format:
 {{
@@ -232,9 +232,9 @@ Plans:
 1. Drive Premium Plan - Higher coverage limits, 24/7 roadside assistance, windscreen coverage
 2. Drive Classic Plan - Standard coverage, essential protection
 
-Current vehicle: {vehicle_type}} - {vehicle_make}} {vehicle_model}}
-Current session state: {state}}
-User message: {user_message}}
+Current vehicle: {vehicle_type} - {vehicle_make} {vehicle_model}
+Current session state: {state}
+User message: {user_message}
 
 Respond in JSON format with coverage comparison cards when appropriate:
 {{
@@ -271,8 +271,8 @@ If manual entry, collect:
 - Email
 - Address
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Respond in JSON format:
 {{
@@ -297,8 +297,8 @@ Risk factors:
 - 1 minor claim: Medium risk
 - Multiple claims or major claim: High risk, may need loading
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Respond in JSON format:
 {{
@@ -327,8 +327,8 @@ Adjustments:
 - Telematics opt-in: -5%
 - Risk loading: +10% to +30% for high risk
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Calculate and respond in JSON format with quote details:
 {{
@@ -370,8 +370,8 @@ Documents to generate:
 3. Terms and Conditions
 4. Premium Breakdown
 
-Current session state: {state}}
-User message: {user_message}}
+Current session state: {state}
+User message: {user_message}
 
 Respond in JSON format:
 {{
