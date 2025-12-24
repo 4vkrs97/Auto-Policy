@@ -401,75 +401,9 @@ Respond in JSON format:
 # ============ LLM CHAT HANDLER ============
 
 async def get_agent_response(session_id: str, user_message: str, state: dict, agent: str) -> dict:
-    """Get response from the appropriate agent using LLM"""
-    api_key = os.environ.get('EMERGENT_LLM_KEY')
-    
-    if not api_key:
-        logger.error("EMERGENT_LLM_KEY not found")
-        raise HTTPException(status_code=500, detail="LLM API key not configured")
-    
-    # Select appropriate system prompt based on agent
-    prompts = {
-        "orchestrator": ORCHESTRATOR_PROMPT,
-        "intake": INTAKE_AGENT_PROMPT,
-        "coverage": COVERAGE_AGENT_PROMPT,
-        "driver_identity": DRIVER_IDENTITY_AGENT_PROMPT,
-        "risk_assessment": RISK_ASSESSMENT_PROMPT,
-        "pricing": PRICING_AGENT_PROMPT,
-        "document": DOCUMENT_AGENT_PROMPT
-    }
-    
-    system_prompt = prompts.get(agent, ORCHESTRATOR_PROMPT)
-    
-    # Format the system prompt with state and available options
-    formatted_prompt = system_prompt.format(
-        state=json.dumps(state, indent=2),
-        user_message=user_message,
-        car_makes=", ".join(VEHICLE_MAKES.get("car", [])),
-        motorcycle_makes=", ".join(VEHICLE_MAKES.get("motorcycle", [])),
-        vehicle_type=state.get("vehicle_type", "Not specified"),
-        vehicle_make=state.get("vehicle_make", "Not specified"),
-        vehicle_model=state.get("vehicle_model", "Not specified")
-    )
-    
-    try:
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"{session_id}_{agent}_{datetime.now().timestamp()}",
-            system_message=formatted_prompt
-        ).with_model("openai", "gpt-4o")
-        
-        user_msg = UserMessage(text=user_message)
-        response = await chat.send_message(user_msg)
-        
-        # Parse JSON response
-        try:
-            # Try to extract JSON from the response
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            if json_start != -1 and json_end > json_start:
-                json_str = response[json_start:json_end]
-                parsed = json.loads(json_str)
-                # If no quick_replies, use fallback to get them
-                if not parsed.get("quick_replies"):
-                    fallback = get_fallback_response(state, agent, user_message)
-                    parsed["quick_replies"] = fallback.get("quick_replies", [])
-                return parsed
-            else:
-                # LLM returned plain text, use fallback with LLM message
-                fallback = get_fallback_response(state, agent, user_message)
-                fallback["message"] = response if response.strip() else fallback["message"]
-                return fallback
-        except json.JSONDecodeError:
-            # JSON parsing failed, use fallback with LLM message
-            fallback = get_fallback_response(state, agent, user_message)
-            fallback["message"] = response if response.strip() else fallback["message"]
-            return fallback
-            
-    except Exception as e:
-        logger.error(f"LLM error: {str(e)}")
-        # Fallback responses based on state
-        return get_fallback_response(state, agent, user_message)
+    """Get response from the appropriate agent - using fallback for speed"""
+    # Use fallback responses directly for faster and more predictable flow
+    return get_fallback_response(state, agent, user_message)
 
 def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     """Provide fallback responses when LLM fails"""
