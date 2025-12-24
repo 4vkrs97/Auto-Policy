@@ -191,6 +191,12 @@ export const ChatPage = () => {
           return <QuoteCard key={index} card={card} />;
         case "policy_document":
           return <PolicyCard key={index} card={card} onDownload={handleDownloadPdf} />;
+        case "vehicle_fetch":
+          return <DataFetchCard key={index} type="vehicle" data={card.data} />;
+        case "singpass_fetch":
+          return <DataFetchCard key={index} type="singpass" data={card.data} />;
+        case "risk_fetch":
+          return <DataFetchCard key={index} type="risk" data={card.data} />;
         default:
           return null;
       }
