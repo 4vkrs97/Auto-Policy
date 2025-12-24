@@ -1,4 +1,4 @@
-import { Shield, Car } from "lucide-react";
+import { Shield, Car, CheckCircle } from "lucide-react";
 
 export const QuoteCard = ({ card }) => {
   return (
@@ -20,25 +20,21 @@ export const QuoteCard = ({ card }) => {
         </div>
       )}
 
-      <div className="bg-white/10 rounded-xl p-4 mb-4">
-        {card.breakdown?.map((item, index) => (
-          <div 
-            key={index} 
-            className={`breakdown-item ${index === card.breakdown.length - 1 ? 'pt-3 border-t border-white/20 mt-2' : ''}`}
-          >
-            <span className={index === card.breakdown.length - 1 ? 'text-lg' : 'text-sm text-white/80'}>
-              {item.item}
-            </span>
-            <span className={index === card.breakdown.length - 1 ? 'text-lg font-bold' : 'text-sm'}>
-              {item.amount}
-            </span>
-          </div>
-        ))}
+      <div className="quote-breakdown">
+        {card.breakdown?.map((item, index) => {
+          const isTotal = index === card.breakdown.length - 1;
+          return (
+            <div key={index} className={`quote-row ${isTotal ? 'font-bold' : ''}`}>
+              <span>{item.item}</span>
+              <span>{item.amount}</span>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="text-center">
+      <div className="text-center mt-4 pt-4 border-t border-white/20">
         <div className="text-3xl font-bold font-['Outfit']">{card.premium}</div>
-        <p className="text-sm text-white/60">Annual Premium</p>
+        <p className="text-sm text-white/70 mt-1">Annual Premium</p>
       </div>
     </div>
   );
