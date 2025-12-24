@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Send, ArrowLeft, Download, FileText, Check, X, LogOut, RefreshCw, Car, Shield, User, Briefcase, Calendar, Clock, AlertTriangle } from "lucide-react";
+import { Send, ArrowLeft, Download, FileText, Check, X, LogOut, RefreshCw, Car, Shield, User, Briefcase, Calendar, Clock, AlertTriangle, Bot, Calculator, Cpu, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import ChatBubble from "@/components/chat/ChatBubble";
-import QuickReplies from "@/components/chat/QuickReplies";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import CoverageCard from "@/components/cards/CoverageCard";
 import QuoteCard from "@/components/cards/QuoteCard";
@@ -15,18 +14,18 @@ const JIFFY_JANE = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-// Action button icons mapping
-const ACTION_ICONS = {
-  car: Car,
-  motorcycle: Car,
-  comprehensive: Shield,
-  third_party: Shield,
-  singpass: User,
-  manual: User,
-  premium: Briefcase,
-  classic: Briefcase,
-  default: Calendar
-};
+// Agent configuration for the status panel
+const AGENTS = [
+  { key: "orchestrator", name: "Orchestrator", icon: Bot, color: "bg-orange-500" },
+  { key: "intake", name: "Vehicle Agent", icon: Car, color: "bg-blue-500" },
+  { key: "coverage", name: "Coverage Agent", icon: Shield, color: "bg-green-500" },
+  { key: "driver_identity", name: "Identity Agent", icon: User, color: "bg-purple-500" },
+  { key: "driver_eligibility", name: "Eligibility Agent", icon: CheckCircle, color: "bg-indigo-500" },
+  { key: "telematics", name: "Telematics Agent", icon: Cpu, color: "bg-cyan-500" },
+  { key: "risk_assessment", name: "Risk Agent", icon: Shield, color: "bg-amber-500" },
+  { key: "pricing", name: "Pricing Agent", icon: Calculator, color: "bg-emerald-500" },
+  { key: "document", name: "Document Agent", icon: FileText, color: "bg-rose-500" },
+];
 
 export const ChatPage = () => {
   const { sessionId } = useParams();
@@ -37,6 +36,8 @@ export const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [policyNumber, setPolicyNumber] = useState(null);
+  const [currentAgent, setCurrentAgent] = useState("orchestrator");
+  const [completedAgents, setCompletedAgents] = useState([]);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -55,6 +56,7 @@ export const ChatPage = () => {
           }
           const sessionData = await sessionRes.json();
           setSession(sessionData);
+          setCurrentAgent(sessionData.current_agent || "orchestrator");
           if (sessionData.state?.policy_number) {
             setPolicyNumber(sessionData.state.policy_number);
           }
@@ -63,6 +65,12 @@ export const ChatPage = () => {
           if (messagesRes.ok) {
             const messagesData = await messagesRes.json();
             setMessages(messagesData);
+            
+            // Track completed agents from message history
+            const agents = messagesData
+              .filter(m => m.role === "assistant" && m.agent)
+              .map(m => m.agent);
+            setCompletedAgents([...new Set(agents)]);
             
             if (messagesData.length === 0) {
               const welcomeRes = await fetch(`${API}/welcome/${sessionId}`, {
@@ -143,6 +151,12 @@ export const ChatPage = () => {
       setIsTyping(false);
       setMessages(prev => [...prev, data.message]);
       setSession(prev => ({ ...prev, state: data.state, current_agent: data.current_agent }));
+      setCurrentAgent(data.current_agent);
+      
+      // Track completed agents
+      if (data.current_agent && !completedAgents.includes(data.current_agent)) {
+        setCompletedAgents(prev => [...prev, data.current_agent]);
+      }
       
       if (data.state?.policy_number) {
         setPolicyNumber(data.state.policy_number);
@@ -221,8 +235,16 @@ export const ChatPage = () => {
   };
 
   const lastAssistantMessage = messages.filter(m => m.role === "assistant").pop();
-  const vehicleInfo = session?.state?.vehicle_make ? 
-    `${session.state.vehicle_make} ${session.state.vehicle_model || ''}` : null;
+
+  // Get previous agent for each message
+  const getPreviousAgent = (index) => {
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant" && messages[i].agent) {
+        return messages[i].agent;
+      }
+    }
+    return null;
+  };
 
   return (
     <div className="chat-page" data-testid="chat-page">
@@ -266,122 +288,197 @@ export const ChatPage = () => {
 
       {/* Main Content */}
       <main className="chat-main">
-        <div className="chat-card">
-          {/* Policy Info Header */}
-          <div className="card-header">
-            <div className="policy-info">
-              <span className="policy-type">
-                Type: Income Motor Insurance - {session?.state?.plan_name || 'Quote in Progress'}
-              </span>
-              <span className={`policy-status ${session?.state?.documents_ready ? 'active' : ''}`}>
-                Status: {session?.state?.documents_ready ? 'ACTIVE' : 'IN PROGRESS'}
-              </span>
-            </div>
-            
-            <button 
-              className="primary-action-btn"
-              onClick={handleNewQuote}
-              data-testid="new-quote-header-btn"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Start New Quote
-            </button>
-          </div>
-
-          {/* Messages Area */}
-          <div className="messages-area" data-testid="messages-container">
-            {messages.map((message, index) => (
-              <div 
-                key={message.id || index} 
-                className="animate-slide-in"
-                style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
-              >
-                <ChatBubble 
-                  message={message} 
-                  avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
-                />
-                
-                {/* Render cards after assistant messages */}
-                {message.role === "assistant" && message.cards && (
-                  <div className="ml-[52px] mt-2">
-                    {renderCards(message.cards)}
-                  </div>
-                )}
-                
-                {/* Render quick action buttons for last assistant message */}
-                {message.role === "assistant" && 
-                 message === lastAssistantMessage && 
-                 message.quick_replies && 
-                 message.quick_replies.length > 0 &&
-                 !isTyping && (
-                  <div className="ml-[52px] mt-3">
-                    <div className="action-buttons-grid">
-                      {message.quick_replies.map((reply, idx) => {
-                        const IconComponent = getIconForReply(reply.value);
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => handleQuickReply(reply.value, reply.label)}
-                            className="action-button"
-                            data-testid={`quick-reply-${idx}`}
-                          >
-                            <IconComponent className="w-4 h-4" />
-                            {reply.label}
-                          </button>
-                        );
-                      })}
+        <div className="flex gap-6 w-full max-w-[1200px]">
+          {/* Agent Status Panel */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sticky top-6">
+              <h3 className="font-semibold text-gray-900 font-['Outfit'] mb-4 flex items-center gap-2">
+                <Bot className="w-5 h-5 text-orange-500" />
+                Agent Pipeline
+              </h3>
+              <div className="space-y-2">
+                {AGENTS.map((agent, index) => {
+                  const Icon = agent.icon;
+                  const isActive = currentAgent === agent.key;
+                  const isCompleted = completedAgents.includes(agent.key);
+                  
+                  return (
+                    <div 
+                      key={agent.key}
+                      className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
+                        isActive 
+                          ? 'bg-orange-50 border-2 border-orange-300' 
+                          : isCompleted 
+                            ? 'bg-green-50 border border-green-200' 
+                            : 'bg-gray-50 border border-gray-100'
+                      }`}
+                      data-testid={`agent-status-${agent.key}`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        isActive ? agent.color : isCompleted ? 'bg-green-500' : 'bg-gray-300'
+                      }`}>
+                        {isCompleted && !isActive ? (
+                          <Check className="w-4 h-4 text-white" />
+                        ) : (
+                          <Icon className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-medium truncate ${
+                          isActive ? 'text-orange-700' : isCompleted ? 'text-green-700' : 'text-gray-500'
+                        }`}>
+                          {agent.name}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {isActive ? 'Active' : isCompleted ? 'Completed' : 'Pending'}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <span className="flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-orange-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+                        </span>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            ))}
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <div className="animate-slide-in">
-                <div className="message-row">
-                  <img 
-                    src={JIFFY_JANE} 
-                    alt="Jiffy Jane" 
-                    className="message-avatar"
+              
+              {/* Progress */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Progress</span>
+                  <span>{Math.round((completedAgents.length / AGENTS.length) * 100)}%</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
+                    style={{ width: `${(completedAgents.length / AGENTS.length) * 100}%` }}
                   />
-                  <div className="typing-indicator">
-                    <div className="typing-dot"></div>
-                    <div className="typing-dot"></div>
-                    <div className="typing-dot"></div>
-                  </div>
                 </div>
               </div>
-            )}
-
-            <div ref={messagesEndRef} />
+            </div>
           </div>
 
-          {/* Input Area */}
-          <form 
-            onSubmit={handleSubmit}
-            className="chat-input-container"
-            data-testid="chat-input-form"
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type your message..."
-              className="chat-input-field"
-              disabled={isLoading || isTyping}
-              data-testid="chat-input"
-            />
-            <button
-              type="submit"
-              className="send-btn"
-              disabled={!inputValue.trim() || isLoading || isTyping}
-              data-testid="send-button"
+          {/* Chat Card */}
+          <div className="chat-card flex-1">
+            {/* Policy Info Header */}
+            <div className="card-header">
+              <div className="policy-info">
+                <span className="policy-type">
+                  Type: Income Motor Insurance - {session?.state?.plan_name || 'Quote in Progress'}
+                </span>
+                <span className={`policy-status ${session?.state?.documents_ready ? 'active' : ''}`}>
+                  Status: {session?.state?.documents_ready ? 'ACTIVE' : 'IN PROGRESS'}
+                </span>
+              </div>
+              
+              <button 
+                className="primary-action-btn"
+                onClick={handleNewQuote}
+                data-testid="new-quote-header-btn"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Start New Quote
+              </button>
+            </div>
+
+            {/* Messages Area */}
+            <div className="messages-area" data-testid="messages-container">
+              {messages.map((message, index) => (
+                <div 
+                  key={message.id || index} 
+                  className="animate-slide-in"
+                  style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
+                >
+                  <ChatBubble 
+                    message={message} 
+                    avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
+                    previousAgent={getPreviousAgent(index)}
+                  />
+                  
+                  {/* Render cards after assistant messages */}
+                  {message.role === "assistant" && message.cards && (
+                    <div className="ml-[52px] mt-2">
+                      {renderCards(message.cards)}
+                    </div>
+                  )}
+                  
+                  {/* Render quick action buttons for last assistant message */}
+                  {message.role === "assistant" && 
+                   message === lastAssistantMessage && 
+                   message.quick_replies && 
+                   message.quick_replies.length > 0 &&
+                   !isTyping && (
+                    <div className="ml-[52px] mt-3">
+                      <div className="action-buttons-grid">
+                        {message.quick_replies.map((reply, idx) => {
+                          const IconComponent = getIconForReply(reply.value);
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => handleQuickReply(reply.value, reply.label)}
+                              className="action-button"
+                              data-testid={`quick-reply-${idx}`}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                              {reply.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Typing Indicator */}
+              {isTyping && (
+                <div className="animate-slide-in">
+                  <div className="message-row">
+                    <img 
+                      src={JIFFY_JANE} 
+                      alt="Jiffy Jane" 
+                      className="message-avatar"
+                    />
+                    <div className="typing-indicator">
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <form 
+              onSubmit={handleSubmit}
+              className="chat-input-container"
+              data-testid="chat-input-form"
             >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type your message..."
+                className="chat-input-field"
+                disabled={isLoading || isTyping}
+                data-testid="chat-input"
+              />
+              <button
+                type="submit"
+                className="send-btn"
+                disabled={!inputValue.trim() || isLoading || isTyping}
+                data-testid="send-button"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+          </div>
         </div>
       </main>
 
