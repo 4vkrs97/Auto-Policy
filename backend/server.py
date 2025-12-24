@@ -449,21 +449,22 @@ async def get_agent_response(session_id: str, user_message: str, state: dict, ag
             json_end = response.rfind('}') + 1
             if json_start != -1 and json_end > json_start:
                 json_str = response[json_start:json_end]
-                return json.loads(json_str)
+                parsed = json.loads(json_str)
+                # If no quick_replies, use fallback to get them
+                if not parsed.get("quick_replies"):
+                    fallback = get_fallback_response(state, agent, user_message)
+                    parsed["quick_replies"] = fallback.get("quick_replies", [])
+                return parsed
             else:
-                return {
-                    "message": response,
-                    "quick_replies": [],
-                    "next_agent": agent,
-                    "data_collected": {}
-                }
+                # LLM returned plain text, use fallback with LLM message
+                fallback = get_fallback_response(state, agent, user_message)
+                fallback["message"] = response if response.strip() else fallback["message"]
+                return fallback
         except json.JSONDecodeError:
-            return {
-                "message": response,
-                "quick_replies": [],
-                "next_agent": agent,
-                "data_collected": {}
-            }
+            # JSON parsing failed, use fallback with LLM message
+            fallback = get_fallback_response(state, agent, user_message)
+            fallback["message"] = response if response.strip() else fallback["message"]
+            return fallback
             
     except Exception as e:
         logger.error(f"LLM error: {str(e)}")
