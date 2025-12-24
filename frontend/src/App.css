@@ -559,3 +559,149 @@
     align-items: center;
     gap: 6px;
 }
+
+/* Agent handoff indicator */
+.agent-handoff {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0;
+}
+
+.agent-handoff-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+    border: 1px solid #DEE2E6;
+    border-radius: 100px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Agent status panel */
+.agent-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.agent-panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: #1F2937;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.agent-status-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.agent-status-item.active {
+    background: #FFF7ED;
+    border: 2px solid #FDBA74;
+}
+
+.agent-status-item.completed {
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+}
+
+.agent-status-item.pending {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+}
+
+.agent-icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.agent-icon-circle.active {
+    background: #F96302;
+}
+
+.agent-icon-circle.completed {
+    background: #22C55E;
+}
+
+.agent-icon-circle.pending {
+    background: #D1D5DB;
+}
+
+/* Progress bar */
+.progress-bar-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #E5E7EB;
+}
+
+.progress-bar-bg {
+    height: 8px;
+    background: #E5E7EB;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #F97316 0%, #EA580C 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Pulsing dot animation */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.pulse-dot {
+    position: relative;
+}
+
+.pulse-dot::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: inherit;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
