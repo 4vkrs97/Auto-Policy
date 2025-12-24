@@ -78,7 +78,7 @@ class MotorInsuranceAPITester:
             "Create Session",
             "POST", 
             "sessions",
-            201,
+            200,
             data={"user_agent": "test-agent"}
         )
         if success and 'id' in response:
