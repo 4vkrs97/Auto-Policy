@@ -824,20 +824,36 @@ async def create_session(input: SessionCreate):
         state={
             "step": "welcome",
             "vehicle_type": None,
+            "registration_number": None,
             "vehicle_make": None,
             "vehicle_model": None,
             "engine_capacity": None,
-            "off_peak": None,
+            "vehicle_year": None,
+            "vehicle_confirmed": None,
             "coverage_type": None,
             "plan_name": None,
             "driver_info_method": None,
             "singpass_consent": None,
+            "driver_confirmed": None,
             "driver_name": None,
+            "driver_nric": None,
+            "driver_dob": None,
+            "driver_phone": None,
+            "driver_email": None,
+            "driver_address": None,
+            "license_class": None,
             "claims_history": None,
             "additional_drivers": None,
             "telematics_consent": None,
+            "risk_assessed": None,
+            "ncd_percent": None,
+            "risk_level": None,
+            "base_premium": None,
             "final_premium": None,
-            "policy_number": None
+            "ncd_discount": None,
+            "telematics_discount": None,
+            "policy_number": None,
+            "documents_ready": None
         }
     )
     
