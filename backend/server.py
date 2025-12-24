@@ -1139,11 +1139,13 @@ async def generate_pdf_document(session_id: str):
     # Coverage details
     story.append(Paragraph("Coverage Details", heading_style))
     coverage_type = state.get("coverage_type") or "N/A"
+    final_premium = state.get('final_premium') or 0
+    ncd_discount = state.get('ncd_discount') or 0
     coverage_data = [
         ["Coverage Type:", coverage_type.replace("_", " ").title() if coverage_type != "N/A" else "N/A"],
         ["Plan:", state.get("plan_name") or "N/A"],
-        ["Annual Premium:", f"${state.get('final_premium', 0):.2f}"],
-        ["NCD Discount:", f"${state.get('ncd_discount', 0):.2f}"],
+        ["Annual Premium:", f"${final_premium:.2f}"],
+        ["NCD Discount:", f"${ncd_discount:.2f}"],
     ]
     
     t = Table(coverage_data, colWidths=[2*inch, 4*inch])
