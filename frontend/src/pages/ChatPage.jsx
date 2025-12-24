@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Send, ArrowLeft, Download, FileText, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Send, ArrowLeft, Download, FileText, Check, X, LogOut, RefreshCw, Car, Shield, User, Briefcase, Calendar, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import ChatBubble from "@/components/chat/ChatBubble";
 import QuickReplies from "@/components/chat/QuickReplies";
@@ -16,6 +15,19 @@ const JIFFY_JANE = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Action button icons mapping
+const ACTION_ICONS = {
+  car: Car,
+  motorcycle: Car,
+  comprehensive: Shield,
+  third_party: Shield,
+  singpass: User,
+  manual: User,
+  premium: Briefcase,
+  classic: Briefcase,
+  default: Calendar
+};
+
 export const ChatPage = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -24,6 +36,7 @@ export const ChatPage = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [policyNumber, setPolicyNumber] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -36,21 +49,21 @@ export const ChatPage = () => {
     const initSession = async () => {
       try {
         if (sessionId) {
-          // Get existing session
           const sessionRes = await fetch(`${API}/sessions/${sessionId}`);
           if (!sessionRes.ok) {
             throw new Error("Session not found");
           }
           const sessionData = await sessionRes.json();
           setSession(sessionData);
+          if (sessionData.state?.policy_number) {
+            setPolicyNumber(sessionData.state.policy_number);
+          }
 
-          // Get existing messages
           const messagesRes = await fetch(`${API}/messages/${sessionId}`);
           if (messagesRes.ok) {
             const messagesData = await messagesRes.json();
             setMessages(messagesData);
             
-            // If no messages, get welcome message
             if (messagesData.length === 0) {
               const welcomeRes = await fetch(`${API}/welcome/${sessionId}`, {
                 method: "POST"
@@ -62,7 +75,6 @@ export const ChatPage = () => {
             }
           }
         } else {
-          // Create new session
           const response = await fetch(`${API}/sessions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -75,7 +87,6 @@ export const ChatPage = () => {
           setSession(newSession);
           navigate(`/chat/${newSession.id}`, { replace: true });
 
-          // Get welcome message
           const welcomeRes = await fetch(`${API}/welcome/${newSession.id}`, {
             method: "POST"
           });
@@ -94,7 +105,6 @@ export const ChatPage = () => {
     initSession();
   }, [sessionId, navigate]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -128,12 +138,15 @@ export const ChatPage = () => {
 
       const data = await response.json();
       
-      // Small delay to show typing indicator
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       setIsTyping(false);
       setMessages(prev => [...prev, data.message]);
       setSession(prev => ({ ...prev, state: data.state, current_agent: data.current_agent }));
+      
+      if (data.state?.policy_number) {
+        setPolicyNumber(data.state.policy_number);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       setIsTyping(false);
@@ -179,6 +192,10 @@ export const ChatPage = () => {
     }
   };
 
+  const handleNewQuote = () => {
+    navigate("/");
+  };
+
   const renderCards = (cards) => {
     if (!cards || cards.length === 0) return null;
 
@@ -204,122 +221,198 @@ export const ChatPage = () => {
   };
 
   const lastAssistantMessage = messages.filter(m => m.role === "assistant").pop();
+  const vehicleInfo = session?.state?.vehicle_make ? 
+    `${session.state.vehicle_make} ${session.state.vehicle_model || ''}` : null;
 
   return (
-    <div className="chat-container" data-testid="chat-page">
-      {/* Header */}
-      <header className="flex items-center gap-4 px-6 py-4 bg-[#F96302] text-white sticky top-0 z-50">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20 -ml-2"
-          onClick={() => navigate("/")}
-          data-testid="back-button"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+    <div className="chat-page" data-testid="chat-page">
+      {/* Orange Header */}
+      <header className="chat-header">
+        <div className="chat-header-left">
+          <img 
+            src={INCOME_LOGO} 
+            alt="Income" 
+            className="income-logo"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+        </div>
         
-        <img 
-          src={INCOME_LOGO} 
-          alt="Income" 
-          className="h-8"
-        />
-        
-        <div className="flex-1 text-center">
-          <h1 className="font-semibold text-lg font-['Outfit']">Motor Insurance</h1>
-          <p className="text-sm text-white/80">Powered by AI Agents</p>
+        <div className="chat-header-center">
+          <img 
+            src={JIFFY_JANE} 
+            alt="Jiffy Jane" 
+            className="header-avatar"
+            data-testid="chat-jiffy-avatar"
+          />
+          <span className="font-semibold text-white font-['Outfit']">Jiffy Jane</span>
         </div>
 
-        <img 
-          src={JIFFY_JANE} 
-          alt="Jiffy Jane" 
-          className="w-12 h-12 rounded-xl bg-white object-cover"
-          data-testid="chat-jiffy-avatar"
-        />
-      </header>
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 md:px-[10%] lg:px-[20%]" data-testid="messages-container">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((message, index) => (
-            <div 
-              key={message.id || index} 
-              className="animate-slide-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <ChatBubble 
-                message={message} 
-                avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
-              />
-              
-              {/* Render cards after assistant messages */}
-              {message.role === "assistant" && message.cards && (
-                <div className="mt-3 ml-14">
-                  {renderCards(message.cards)}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Typing Indicator */}
-          {isTyping && (
-            <div className="animate-slide-in">
-              <div className="flex items-end gap-2">
-                <img 
-                  src={JIFFY_JANE} 
-                  alt="Jiffy Jane" 
-                  className="w-10 h-10 rounded-xl bg-white object-cover"
-                />
-                <TypingIndicator />
-              </div>
+        <div className="chat-header-right">
+          {policyNumber && (
+            <div className="text-right text-sm">
+              <div className="font-medium">Policy Holder</div>
+              <div className="text-white/80 text-xs">{policyNumber}</div>
             </div>
           )}
-
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Quick Replies */}
-      {lastAssistantMessage?.quick_replies && !isTyping && (
-        <div className="px-6 md:px-[10%] lg:px-[20%]">
-          <div className="max-w-4xl mx-auto">
-            <QuickReplies 
-              replies={lastAssistantMessage.quick_replies}
-              onSelect={handleQuickReply}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Input Area */}
-      <form 
-        onSubmit={handleSubmit}
-        className="chat-input-area flex items-center gap-3"
-        data-testid="chat-input-form"
-      >
-        <div className="flex-1 max-w-4xl mx-auto flex items-center gap-3 w-full">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="chat-input flex-1"
-            disabled={isLoading || isTyping}
-            data-testid="chat-input"
-          />
-          <button
-            type="submit"
-            className="send-button"
-            disabled={!inputValue.trim() || isLoading || isTyping}
-            data-testid="send-button"
+          <button 
+            onClick={handleNewQuote}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            data-testid="new-quote-btn"
           >
-            <Send className="w-5 h-5 text-white" />
+            <LogOut className="w-5 h-5 text-white" />
           </button>
         </div>
-      </form>
+      </header>
+
+      {/* Main Content */}
+      <main className="chat-main">
+        <div className="chat-card">
+          {/* Policy Info Header */}
+          <div className="card-header">
+            <div className="policy-info">
+              <span className="policy-type">
+                Type: Income Motor Insurance - {session?.state?.plan_name || 'Quote in Progress'}
+              </span>
+              <span className={`policy-status ${session?.state?.documents_ready ? 'active' : ''}`}>
+                Status: {session?.state?.documents_ready ? 'ACTIVE' : 'IN PROGRESS'}
+              </span>
+            </div>
+            
+            <button 
+              className="primary-action-btn"
+              onClick={handleNewQuote}
+              data-testid="new-quote-header-btn"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Start New Quote
+            </button>
+          </div>
+
+          {/* Messages Area */}
+          <div className="messages-area" data-testid="messages-container">
+            {messages.map((message, index) => (
+              <div 
+                key={message.id || index} 
+                className="animate-slide-in"
+                style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s` }}
+              >
+                <ChatBubble 
+                  message={message} 
+                  avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
+                />
+                
+                {/* Render cards after assistant messages */}
+                {message.role === "assistant" && message.cards && (
+                  <div className="ml-[52px] mt-2">
+                    {renderCards(message.cards)}
+                  </div>
+                )}
+                
+                {/* Render quick action buttons for last assistant message */}
+                {message.role === "assistant" && 
+                 message === lastAssistantMessage && 
+                 message.quick_replies && 
+                 message.quick_replies.length > 0 &&
+                 !isTyping && (
+                  <div className="ml-[52px] mt-3">
+                    <div className="action-buttons-grid">
+                      {message.quick_replies.map((reply, idx) => {
+                        const IconComponent = getIconForReply(reply.value);
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleQuickReply(reply.value, reply.label)}
+                            className="action-button"
+                            data-testid={`quick-reply-${idx}`}
+                          >
+                            <IconComponent className="w-4 h-4" />
+                            {reply.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="animate-slide-in">
+                <div className="message-row">
+                  <img 
+                    src={JIFFY_JANE} 
+                    alt="Jiffy Jane" 
+                    className="message-avatar"
+                  />
+                  <div className="typing-indicator">
+                    <div className="typing-dot"></div>
+                    <div className="typing-dot"></div>
+                    <div className="typing-dot"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Area */}
+          <form 
+            onSubmit={handleSubmit}
+            className="chat-input-container"
+            data-testid="chat-input-form"
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Type your message..."
+              className="chat-input-field"
+              disabled={isLoading || isTyping}
+              data-testid="chat-input"
+            />
+            <button
+              type="submit"
+              className="send-btn"
+              disabled={!inputValue.trim() || isLoading || isTyping}
+              data-testid="send-button"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </form>
+        </div>
+      </main>
+
+      {/* Made with Emergent badge */}
+      <div className="emergent-badge">
+        <div className="w-5 h-5 rounded-full bg-[#F96302] flex items-center justify-center">
+          <span className="text-white text-xs font-bold">E</span>
+        </div>
+        Made with Emergent
+      </div>
     </div>
   );
 };
+
+// Helper function to get icon for quick reply
+function getIconForReply(value) {
+  const valueLower = value?.toLowerCase() || '';
+  
+  if (valueLower.includes('car')) return Car;
+  if (valueLower.includes('motorcycle')) return Car;
+  if (valueLower.includes('comprehensive') || valueLower.includes('third')) return Shield;
+  if (valueLower.includes('singpass') || valueLower.includes('manual') || valueLower.includes('consent')) return User;
+  if (valueLower.includes('premium') || valueLower.includes('classic')) return Briefcase;
+  if (valueLower.includes('claim') || valueLower.includes('no_claims')) return AlertTriangle;
+  if (valueLower.includes('driver') || valueLower.includes('none') || valueLower.includes('add')) return User;
+  if (valueLower.includes('telematics') || valueLower.includes('save')) return Clock;
+  if (valueLower.includes('confirm') || valueLower.includes('accept')) return Check;
+  if (valueLower.includes('download') || valueLower.includes('pdf')) return Download;
+  if (valueLower.includes('view') || valueLower.includes('quote')) return FileText;
+  
+  return Calendar;
+}
 
 export default ChatPage;
