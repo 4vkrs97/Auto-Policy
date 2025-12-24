@@ -201,7 +201,7 @@ export const ChatPage = () => {
   return (
     <div className="chat-container" data-testid="chat-page">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 bg-[#F96302] text-white sticky top-0 z-50">
+      <header className="flex items-center gap-4 px-6 py-4 bg-[#F96302] text-white sticky top-0 z-50">
         <Button
           variant="ghost"
           size="icon"
@@ -215,67 +215,73 @@ export const ChatPage = () => {
         <img 
           src={JIFFY_JANE} 
           alt="Jiffy Jane" 
-          className="w-10 h-10 rounded-xl bg-white object-cover"
+          className="w-12 h-12 rounded-xl bg-white object-cover"
           data-testid="chat-jiffy-avatar"
         />
         
         <div className="flex-1">
-          <h1 className="font-semibold text-base font-['Outfit']">Jiffy Jane</h1>
-          <p className="text-xs text-white/80">Income Insurance Assistant</p>
+          <h1 className="font-semibold text-lg font-['Outfit']">Jiffy Jane</h1>
+          <p className="text-sm text-white/80">Income Insurance Assistant</p>
         </div>
 
         <img 
           src={INCOME_LOGO} 
           alt="Income" 
-          className="h-6 opacity-90"
+          className="h-8 opacity-90"
         />
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" data-testid="messages-container">
-        {messages.map((message, index) => (
-          <div 
-            key={message.id || index} 
-            className="animate-slide-in"
-            style={{ animationDelay: `${index * 0.05}s` }}
-          >
-            <ChatBubble 
-              message={message} 
-              avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
-            />
-            
-            {/* Render cards after assistant messages */}
-            {message.role === "assistant" && message.cards && (
-              <div className="mt-3 ml-14">
-                {renderCards(message.cards)}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Typing Indicator */}
-        {isTyping && (
-          <div className="animate-slide-in">
-            <div className="flex items-end gap-2">
-              <img 
-                src={JIFFY_JANE} 
-                alt="Jiffy Jane" 
-                className="w-8 h-8 rounded-xl bg-white object-cover"
+      <div className="flex-1 overflow-y-auto px-6 py-6 md:px-[10%] lg:px-[20%]" data-testid="messages-container">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {messages.map((message, index) => (
+            <div 
+              key={message.id || index} 
+              className="animate-slide-in"
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              <ChatBubble 
+                message={message} 
+                avatarUrl={message.role === "assistant" ? JIFFY_JANE : null}
               />
-              <TypingIndicator />
+              
+              {/* Render cards after assistant messages */}
+              {message.role === "assistant" && message.cards && (
+                <div className="mt-3 ml-14">
+                  {renderCards(message.cards)}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ))}
 
-        <div ref={messagesEndRef} />
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="animate-slide-in">
+              <div className="flex items-end gap-2">
+                <img 
+                  src={JIFFY_JANE} 
+                  alt="Jiffy Jane" 
+                  className="w-10 h-10 rounded-xl bg-white object-cover"
+                />
+                <TypingIndicator />
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Quick Replies */}
       {lastAssistantMessage?.quick_replies && !isTyping && (
-        <QuickReplies 
-          replies={lastAssistantMessage.quick_replies}
-          onSelect={handleQuickReply}
-        />
+        <div className="px-6 md:px-[10%] lg:px-[20%]">
+          <div className="max-w-4xl mx-auto">
+            <QuickReplies 
+              replies={lastAssistantMessage.quick_replies}
+              onSelect={handleQuickReply}
+            />
+          </div>
+        </div>
       )}
 
       {/* Input Area */}
@@ -284,24 +290,26 @@ export const ChatPage = () => {
         className="chat-input-area flex items-center gap-3"
         data-testid="chat-input-form"
       >
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Type your message..."
-          className="chat-input"
-          disabled={isLoading || isTyping}
-          data-testid="chat-input"
-        />
-        <button
-          type="submit"
-          className="send-button"
-          disabled={!inputValue.trim() || isLoading || isTyping}
-          data-testid="send-button"
-        >
-          <Send className="w-5 h-5 text-white" />
-        </button>
+        <div className="flex-1 max-w-4xl mx-auto flex items-center gap-3 w-full">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type your message..."
+            className="chat-input flex-1"
+            disabled={isLoading || isTyping}
+            data-testid="chat-input"
+          />
+          <button
+            type="submit"
+            className="send-button"
+            disabled={!inputValue.trim() || isLoading || isTyping}
+            data-testid="send-button"
+          >
+            <Send className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </form>
     </div>
   );
