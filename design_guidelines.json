@@ -1,0 +1,150 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Income Insurance - Jiffy Jane",
+      "archetype": "Friendly Expert",
+      "tone": "Conversational, Efficient, Trustworthy, Singaporean-Friendly",
+      "primary_mode": "light"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Outfit, sans-serif",
+        "body": "Nunito, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-3xl font-bold tracking-tight",
+        "h2": "text-2xl font-semibold tracking-tight",
+        "h3": "text-xl font-semibold",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-normal",
+        "caption": "text-sm text-muted-foreground"
+      }
+    },
+    "colors": {
+      "primary": {
+        "DEFAULT": "#F96302",
+        "foreground": "#FFFFFF",
+        "hover": "#D85502",
+        "light": "#FFF0E0"
+      },
+      "secondary": {
+        "DEFAULT": "#1F2937",
+        "foreground": "#FFFFFF"
+      },
+      "background": {
+        "app": "#F2F2F7",
+        "chat_container": "#E5E5EA",
+        "card": "#FFFFFF"
+      },
+      "chat": {
+        "bot_bubble": "#FFFFFF",
+        "bot_text": "#1F2937",
+        "user_bubble": "#F96302",
+        "user_text": "#FFFFFF",
+        "system_bubble": "#FEF3C7",
+        "system_text": "#92400E"
+      },
+      "status": {
+        "success": "#10B981",
+        "error": "#EF4444",
+        "warning": "#F59E0B",
+        "info": "#3B82F6"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-4 md:p-6",
+      "section_gap": "gap-6",
+      "chat_bubble_padding": "py-3 px-4",
+      "border_radius": {
+        "bubble": "rounded-2xl",
+        "card": "rounded-xl",
+        "button": "rounded-full"
+      }
+    },
+    "shadows": {
+      "card": "shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+      "float": "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+      "bubble": "shadow-sm"
+    }
+  },
+  "assets": {
+    "images": {
+      "branding": {
+        "logo": "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/ywmks2cv_image.png",
+        "mascot_jiffy_jane": "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/1czfonbv_image.png"
+      },
+      "context": {
+        "singapore_skyline": "https://images.unsplash.com/photo-1629129502662-4629c2428332?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxzaW5nYXBvcmUlMjBjaXR5JTIwc2t5bGluZSUyMGJyaWdodCUyMGRheXxlbnwwfHx8fDE3NjY1NzQ0Njl8MA&ixlib=rb-4.1.0&q=85",
+        "modern_car_bg": "https://images.pexels.com/photos/3543856/pexels-photo-3543856.jpeg",
+        "happy_driver": "https://images.unsplash.com/photo-1649186019834-18ee06d7d5ad?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwzfHxoYXBweSUyMGFzaWFuJTIwZHJpdmVyJTIwaW4lMjBjYXJ8ZW58MHx8fHwxNzY2NTc0NDc1fDA&ixlib=rb-4.1.0&q=85"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "preferred_icons": [
+        "Send", "Paperclip", "ShieldCheck", "Car", "Bike", "FileText", "User", "ChevronRight", "X", "Check", "Info"
+      ]
+    }
+  },
+  "components": {
+    "ChatInterface": {
+      "structure": "Mobile-first container, max-w-md mx-auto on desktop, h-[100dvh] flex flex-col bg-[#E5E5EA]",
+      "header": "Sticky top, bg-primary text-primary-foreground, contains Avatar + Name + Status",
+      "message_list": "Flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth",
+      "input_area": "Fixed bottom, bg-white p-3 border-t flex items-center gap-2"
+    },
+    "ChatBubble": {
+      "bot": "bg-white text-gray-800 rounded-2xl rounded-tl-none shadow-sm self-start max-w-[85%]",
+      "user": "bg-primary text-white rounded-2xl rounded-tr-none shadow-sm self-end max-w-[85%]",
+      "typing_indicator": "Three bouncing dots in a bot bubble"
+    },
+    "QuickReplies": {
+      "style": "Horizontal scroll container (no scrollbar), gap-2 p-2",
+      "item": "whitespace-nowrap px-4 py-2 rounded-full bg-white border border-primary/20 text-primary text-sm font-medium hover:bg-primary/5 transition-colors shadow-sm active:scale-95"
+    },
+    "Cards": {
+      "PolicyQuote": "Bento-style grid inside a chat bubble. White bg, rounded-xl, p-4. Sections for 'Plan Name', 'Premium', 'Coverage Highlights'.",
+      "Comparison": "Side-by-side columns for 'Third Party' vs 'Comprehensive'. Highlight 'Recommended' tag."
+    }
+  },
+  "layout_strategies": {
+    "mobile_first": "Always design for 375px width first. Use 'md:' prefix for desktop constraints.",
+    "safe_areas": "Ensure padding-bottom-safe for iPhone home indicator.",
+    "z_index": {
+      "header": "z-50",
+      "modal": "z-50",
+      "overlay": "z-40",
+      "toast": "z-60"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-out",
+    "entrance": {
+      "message": "animate-in slide-in-from-bottom-2 fade-in duration-300",
+      "modal": "animate-in zoom-in-95 fade-in duration-200"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure text on primary color is White. Text on light bubbles is Gray-900.",
+    "focus": "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+    "aria": "All interactive elements must have aria-label if icon-only."
+  },
+  "instructions_to_main_agent": [
+    "1. INSTALL FONTS: Add '@fontsource/outfit' and '@fontsource/nunito' to package.json immediately.",
+    "2. SETUP TAILWIND: Update tailwind.config.js with the colors defined in this JSON. Extend the theme, do not overwrite.",
+    "3. CREATE LAYOUT: Build the 'ChatLayout' component first. It acts as the shell.",
+    "4. BUILD PRIMITIVES: Create 'ChatBubble', 'QuickReply', 'TypingIndicator' components before implementing logic.",
+    "5. MOCK DATA: Use the provided image URLs for the 'Jiffy Jane' avatar and 'Income' logo.",
+    "6. CRITICAL: Do not use 'Inter' font. Use 'Outfit' for headings and 'Nunito' for body.",
+    "7. CRITICAL: Ensure the 'Input' area stays above the mobile keyboard (use proper viewport meta tags or layout techniques).",
+    "8. TESTING: Add 'data-testid' to every button, input, and message bubble."
+  ],
+  "universal_guidelines": [
+    "Avoid generic AI aesthetics. Use the specific 'Income Orange' (#F96302) boldly.",
+    "Micro-interactions are key. Buttons should scale down slightly on press.",
+    "Use 'sonner' for toast notifications.",
+    "Components must use named exports.",
+    "Do not use 100% transparent backgrounds for headers; use backdrop-blur-md with high opacity bg."
+  ]
+}
