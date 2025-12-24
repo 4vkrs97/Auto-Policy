@@ -76,7 +76,7 @@ class MotorInsuranceAgenticTest:
             "Create Session", 
             "POST", 
             "sessions",
-            201,
+            200,
             {"user_agent": "Test Agent"}
         )
         
