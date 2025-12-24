@@ -306,7 +306,7 @@ class ComprehensiveMotorInsuranceTest:
             return False
             
         # Check for policy document card
-        if 'message' in response and 'cards' in response['message']:
+        if 'message' in response and 'cards' in response['message'] and response['message']['cards']:
             cards = response['message']['cards']
             policy_card = next((card for card in cards if card.get('type') == 'policy_document'), None)
             if policy_card:
@@ -314,7 +314,7 @@ class ComprehensiveMotorInsuranceTest:
             else:
                 self.log("   ⚠️ No policy document card found")
         else:
-            self.log("   ⚠️ No cards in response")
+            self.log("   ⚠️ No cards in response (LLM may not have returned cards format)")
             
         # Test document generation endpoints
         success1 = self.run_test("HTML Document Generation", "GET", f"document/{self.session_id}/html")[0]
