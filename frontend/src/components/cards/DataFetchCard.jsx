@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Car, User, Shield, CheckCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const FETCH_ITEMS = {
   vehicle: {
@@ -50,7 +49,6 @@ export const DataFetchCard = ({ type, data }) => {
   useEffect(() => {
     if (!config) return;
     
-    // Reset on mount
     setCompletedItems([]);
     setIsComplete(false);
     indexRef.current = 0;
@@ -64,30 +62,30 @@ export const DataFetchCard = ({ type, data }) => {
         clearInterval(interval);
         setIsComplete(true);
       }
-    }, 350);
+    }, 300);
 
     return () => clearInterval(interval);
-  }, [type]); // Only re-run when type changes
+  }, [type]);
 
   if (!config) return null;
   
   const Icon = config.icon;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md" data-testid={`fetch-card-${type}`}>
-      <div className="bg-gradient-to-r from-[#F96302] to-[#FF8534] px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-white" />
+    <div className="fetch-card" data-testid={`fetch-card-${type}`}>
+      <div className="fetch-card-header">
+        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h3 className="font-semibold text-white font-['Outfit']">{config.title}</h3>
-          <p className="text-xs text-white/80">
+          <h3 className="font-semibold text-sm font-['Outfit']">{config.title}</h3>
+          <p className="text-xs text-white/70">
             {isComplete ? "Complete" : "Connecting to secure API..."}
           </p>
         </div>
       </div>
       
-      <div className="p-4 space-y-2">
+      <div className="fetch-card-body">
         {config.items.map((item) => {
           const isLoaded = completedItems.includes(item.key);
           const value = data?.[item.key] || "—";
@@ -95,16 +93,13 @@ export const DataFetchCard = ({ type, data }) => {
           return (
             <div 
               key={item.key}
-              className={cn(
-                "flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-300",
-                isLoaded ? "bg-green-50" : "bg-gray-50"
-              )}
+              className={`fetch-row ${isLoaded ? 'complete' : 'loading'}`}
             >
-              <span className="text-sm text-gray-600">{item.label}</span>
+              <span className="text-gray-600">{item.label}</span>
               <div className="flex items-center gap-2">
                 {isLoaded ? (
                   <>
-                    <span className="text-sm font-medium text-gray-900">{value}</span>
+                    <span className="font-medium text-gray-900">{value}</span>
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </>
                 ) : (
@@ -114,16 +109,14 @@ export const DataFetchCard = ({ type, data }) => {
             </div>
           );
         })}
-      </div>
-      
-      {isComplete && (
-        <div className="px-4 pb-4">
-          <div className="bg-green-100 text-green-700 text-sm py-2 px-3 rounded-lg flex items-center gap-2">
+        
+        {isComplete && (
+          <div className="fetch-success-msg">
             <CheckCircle className="w-4 h-4" />
             <span>All data retrieved successfully</span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
