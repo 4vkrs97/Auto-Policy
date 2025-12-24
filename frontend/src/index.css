@@ -7,7 +7,7 @@
 :root {
     --primary: 24 96% 49%;
     --primary-foreground: 0 0% 100%;
-    --background: 240 5% 96%;
+    --background: 195 100% 95%;
     --foreground: 220 13% 18%;
     --card: 0 0% 100%;
     --card-foreground: 220 13% 18%;
@@ -15,7 +15,7 @@
     --popover-foreground: 220 13% 18%;
     --secondary: 220 13% 18%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 5% 92%;
+    --muted: 195 50% 92%;
     --muted-foreground: 220 9% 46%;
     --accent: 24 96% 95%;
     --accent-foreground: 24 96% 49%;
@@ -30,7 +30,7 @@
     --income-orange: #F96302;
     --income-orange-dark: #D85502;
     --income-orange-light: #FFF0E0;
-    --chat-bg: #E5E5EA;
+    --chat-bg: #E0F4F7;
     --bot-bubble: #FFFFFF;
     --user-bubble: #F96302;
 }
@@ -45,15 +45,11 @@ body {
         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #F2F2F7;
+    background: #E0F4F7;
 }
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
-}
-
-code {
-    font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 @layer base {
@@ -61,27 +57,28 @@ code {
         @apply border-border;
     }
     body {
-        @apply bg-background text-foreground;
+        @apply text-foreground;
     }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #E0F4F7;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
+    background: #B8DDE3;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: #9ACFD7;
 }
 
 /* Hide scrollbar for quick replies */
@@ -168,16 +165,4 @@ code {
 .card-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-/* Gradient backgrounds */
-.gradient-orange {
-    background: linear-gradient(135deg, #F96302 0%, #FF8534 100%);
-}
-
-/* Glass effect */
-.glass {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }

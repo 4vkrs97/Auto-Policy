@@ -1,180 +1,245 @@
-/* App-specific styles */
+/* App-specific styles - New Design */
 
 .App {
     min-height: 100vh;
     min-height: 100dvh;
+    background: #E0F4F7;
 }
 
-/* Chat interface styles */
-.chat-container {
+/* New Chat Container Layout */
+.chat-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #E0F4F7;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+}
+
+/* Header - Orange bar */
+.chat-header {
+    background: #F96302;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+}
+
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-header-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+.header-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Main Content Area */
+.chat-main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+/* White Card Container */
+.chat-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 100%;
-    margin: 0;
-    background: #E5E5EA;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 140px);
 }
 
-/* Message bubbles */
-.message-bubble {
+/* Card Header with Policy Info */
+.card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.policy-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.policy-type {
+    font-size: 14px;
+    color: #666;
+}
+
+.policy-status {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.policy-status.active {
+    color: #22C55E;
+}
+
+/* Messages Area */
+.messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+/* Message Bubbles */
+.message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.message-row.user {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.message-content {
     max-width: 70%;
-    padding: 14px 20px;
-    border-radius: 20px;
-    position: relative;
-    word-wrap: break-word;
 }
 
-@media (min-width: 768px) {
-    .message-bubble {
-        max-width: 60%;
-    }
+.message-sender {
+    font-size: 13px;
+    font-weight: 600;
+    color: #F96302;
+    margin-bottom: 4px;
 }
 
-@media (min-width: 1200px) {
-    .message-bubble {
-        max-width: 50%;
-    }
+.message-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 .message-bubble.bot {
-    background: white;
-    color: #1F2937;
+    background: #F8F9FA;
+    color: #333;
     border-bottom-left-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .message-bubble.user {
     background: #F96302;
     color: white;
     border-bottom-right-radius: 4px;
-    margin-left: auto;
 }
 
-/* Quick reply buttons */
-.quick-reply-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 20px;
-    background: white;
-    border: 1.5px solid rgba(249, 99, 2, 0.2);
-    border-radius: 50px;
-    color: #F96302;
-    font-weight: 600;
-    font-size: 14px;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.quick-reply-btn:hover {
-    background: rgba(249, 99, 2, 0.05);
-    border-color: rgba(249, 99, 2, 0.4);
-    transform: translateY(-1px);
-}
-
-.quick-reply-btn:active {
-    transform: scale(0.97);
-}
-
-/* Coverage comparison cards */
-.coverage-card {
-    background: white;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease;
-}
-
-.coverage-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.coverage-card.recommended {
-    border: 2px solid #F96302;
-}
-
-/* Quote summary card */
-.quote-card {
-    background: linear-gradient(135deg, #F96302 0%, #FF8534 100%);
-    border-radius: 20px;
-    padding: 20px;
-    color: white;
-}
-
-.quote-card .breakdown-item {
+/* Quick Action Buttons Grid */
+.action-buttons-grid {
     display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
 }
 
-.quote-card .breakdown-item:last-child {
-    border-bottom: none;
-    font-weight: bold;
-    font-size: 18px;
-}
-
-/* Policy document card */
-.policy-card {
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
     background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 500;
 }
 
-.policy-card-header {
-    background: #F96302;
-    color: white;
-    padding: 16px 20px;
+.action-button:hover {
+    border-color: #F96302;
+    background: #FFF7ED;
+    color: #F96302;
 }
 
-.policy-card-body {
-    padding: 20px;
+.action-button:active {
+    transform: scale(0.98);
 }
 
-/* Input area */
-.chat-input-area {
-    background: white;
-    border-top: 1px solid #E5E5EA;
+.action-button svg {
+    width: 18px;
+    height: 18px;
+    color: #6B7280;
+}
+
+.action-button:hover svg {
+    color: #F96302;
+}
+
+/* Input Area */
+.chat-input-container {
     padding: 16px 24px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-@media (min-width: 768px) {
-    .chat-input-area {
-        padding: 20px 10%;
-    }
-}
-
-@media (min-width: 1200px) {
-    .chat-input-area {
-        padding: 20px 20%;
-    }
-}
-
-.chat-input {
+.chat-input-field {
     flex: 1;
-    border: none;
-    outline: none;
-    font-size: 16px;
-    background: #F2F2F7;
+    border: 1px solid #E5E7EB;
     border-radius: 24px;
     padding: 12px 20px;
-    resize: none;
+    font-size: 14px;
+    outline: none;
     font-family: 'Nunito', sans-serif;
+    transition: border-color 0.2s;
 }
 
-.chat-input::placeholder {
+.chat-input-field:focus {
+    border-color: #F96302;
+}
+
+.chat-input-field::placeholder {
     color: #9CA3AF;
 }
 
-.send-button {
-    width: 44px;
-    height: 44px;
+.send-btn {
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: #F96302;
     border: none;
@@ -186,17 +251,48 @@
     flex-shrink: 0;
 }
 
-.send-button:hover {
+.send-btn:hover {
     background: #D85502;
 }
 
-.send-button:active {
+.send-btn:active {
     transform: scale(0.95);
 }
 
-.send-button:disabled {
-    background: #E5E5EA;
+.send-btn:disabled {
+    background: #E5E7EB;
     cursor: not-allowed;
+}
+
+.send-btn svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+/* Primary Action Button */
+.primary-action-btn {
+    background: #F96302;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.primary-action-btn:hover {
+    background: #D85502;
+}
+
+.primary-action-btn:active {
+    transform: scale(0.98);
 }
 
 /* Typing indicator */
@@ -205,6 +301,9 @@
     align-items: center;
     gap: 4px;
     padding: 12px 16px;
+    background: #F8F9FA;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
 }
 
 .typing-dot {
@@ -214,36 +313,186 @@
     border-radius: 50%;
 }
 
+/* Cards inside chat */
+.chat-card-inline {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 12px;
+    max-width: 400px;
+}
+
+/* Coverage comparison cards */
+.coverage-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.coverage-card:hover {
+    border-color: #F96302;
+    box-shadow: 0 4px 12px rgba(249, 99, 2, 0.1);
+}
+
+.coverage-card.recommended {
+    border: 2px solid #F96302;
+    background: #FFF7ED;
+}
+
+/* Quote summary card */
+.quote-card {
+    background: linear-gradient(135deg, #F96302 0%, #FF8534 100%);
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    margin-top: 12px;
+}
+
+.quote-breakdown {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.quote-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+}
+
+.quote-row:last-child {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 16px;
+    padding-top: 12px;
+}
+
+/* Policy document card */
+.policy-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.policy-card-header {
+    background: #F96302;
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.policy-card-body {
+    padding: 20px;
+}
+
+.policy-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.policy-detail-row svg {
+    width: 16px;
+    height: 16px;
+    color: #F96302;
+}
+
+.policy-premium-box {
+    background: #FFF7ED;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.policy-premium-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #F96302;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Data fetch card */
+.fetch-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 12px;
+    max-width: 400px;
+}
+
+.fetch-card-header {
+    background: linear-gradient(135deg, #F96302 0%, #FF8534 100%);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.fetch-card-body {
+    padding: 16px;
+}
+
+.fetch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    transition: background 0.3s ease;
+}
+
+.fetch-row.loading {
+    background: #F8F9FA;
+}
+
+.fetch-row.complete {
+    background: #ECFDF5;
+}
+
+.fetch-success-msg {
+    background: #ECFDF5;
+    color: #059669;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
 /* Landing page */
 .landing-hero {
-    background: linear-gradient(180deg, #FFF0E0 0%, #F2F2F7 100%);
+    background: linear-gradient(180deg, #FFF0E0 0%, #E0F4F7 100%);
     min-height: 100vh;
     min-height: 100dvh;
 }
 
 /* Income logo */
 .income-logo {
-    height: 40px;
+    height: 32px;
     object-fit: contain;
-}
-
-/* Jiffy Jane avatar */
-.jiffy-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    object-fit: cover;
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.jiffy-avatar-large {
-    width: 120px;
-    height: 120px;
-    border-radius: 24px;
-    object-fit: cover;
-    background: white;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 /* Feature cards on landing */
@@ -283,4 +532,30 @@
 
 .start-button:active {
     transform: translateY(0);
+}
+
+/* Jiffy Jane avatars */
+.jiffy-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 24px;
+    object-fit: cover;
+    background: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Made with Emergent badge */
+.emergent-badge {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #6B7280;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
