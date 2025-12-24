@@ -927,39 +927,26 @@ async def send_message(input: MessageCreate):
 def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     """Update session state based on user input"""
     input_lower = user_input.lower()
+    input_upper = user_input.upper()
     
     # Vehicle type
     if input_lower in ["car", "motorcycle", "🚗 car", "🏍️ motorcycle"]:
         state["vehicle_type"] = "car" if "car" in input_lower else "motorcycle"
     
-    # Vehicle make
-    all_makes = VEHICLE_MAKES.get("car", []) + VEHICLE_MAKES.get("motorcycle", [])
-    for make in all_makes:
-        if make.lower() == input_lower or make.lower() in input_lower:
-            state["vehicle_make"] = make
-            break
+    # Registration number (Singapore format: SXX####X)
+    if state.get("vehicle_type") and not state.get("registration_number"):
+        import re
+        if re.match(r'^[A-Z]{2,3}\d{1,4}[A-Z]?$', input_upper) or input_upper in ["SGX1234A", "SBA5678B"]:
+            state["registration_number"] = input_upper
+        elif input_lower == "manual_entry":
+            state["registration_number"] = "MANUAL"
     
-    # Vehicle model
-    for make, models in VEHICLE_MODELS.items():
-        for model in models:
-            if model.lower() == input_lower or model.lower() in input_lower:
-                state["vehicle_model"] = model
-                break
-    
-    # Engine capacity
-    for vtype, capacities in ENGINE_CAPACITIES.items():
-        for cap in capacities:
-            if cap.lower() == input_lower or cap.lower() in input_lower:
-                state["engine_capacity"] = cap
-                break
-    
-    # Off-peak
-    if input_lower in ["yes", "yes, off-peak", "no", "no, normal"]:
-        if not state.get("off_peak") and state.get("vehicle_type") == "car" and state.get("engine_capacity"):
-            state["off_peak"] = "yes" in input_lower
+    # Confirm vehicle
+    if input_lower in ["confirm_vehicle", "✓ confirm details", "confirm details"]:
+        state["vehicle_confirmed"] = True
     
     # Coverage type
-    if input_lower in ["third party", "third_party", "comprehensive"]:
+    if input_lower in ["third party", "third_party", "third party only", "comprehensive"]:
         state["coverage_type"] = "comprehensive" if "comprehensive" in input_lower else "third_party"
     
     # Plan name
@@ -967,30 +954,46 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         state["plan_name"] = "Drive Premium" if "premium" in input_lower else "Drive Classic"
     
     # Driver info method
-    if input_lower in ["singpass", "use singpass", "manual", "enter manually"]:
+    if input_lower in ["singpass", "use singpass", "🔐 use singpass", "manual", "enter manually"]:
         state["driver_info_method"] = "singpass" if "singpass" in input_lower else "manual"
     
     # Singpass consent
-    if "consent" in input_lower or input_lower in ["yes, i consent", "consent_yes", "consent_no"]:
-        state["singpass_consent"] = "consent_yes" if "yes" in input_lower else "consent_no"
+    if "consent" in input_lower or input_lower in ["✓ i consent", "i consent", "consent_yes", "consent_no"]:
+        state["singpass_consent"] = "consent_yes" if "yes" in input_lower or "✓" in input_lower or "i consent" in input_lower else "consent_no"
+    
+    # Confirm driver
+    if input_lower in ["confirm_driver", "✓ confirm details", "confirm details"] and state.get("singpass_consent"):
+        state["driver_confirmed"] = True
     
     # Claims history
-    if input_lower in ["no claims", "no_claims", "1 minor claim", "1_minor", "multiple claims", "multiple"]:
-        if "no" in input_lower:
-            state["claims_history"] = "no_claims"
-        elif "1" in input_lower or "minor" in input_lower:
-            state["claims_history"] = "1_minor"
-        else:
-            state["claims_history"] = "multiple"
+    if "no claims" in input_lower or input_lower == "no_claims":
+        state["claims_history"] = "no_claims"
+    elif "1 minor" in input_lower or input_lower == "1_minor":
+        state["claims_history"] = "1_minor"
+    elif "multiple" in input_lower:
+        state["claims_history"] = "multiple"
     
     # Additional drivers
-    if input_lower in ["no, just me", "none", "yes, add driver", "add"]:
-        state["additional_drivers"] = "none" if "no" in input_lower or "none" in input_lower else "add"
+    if input_lower in ["no, just me", "none", "add_one", "add 1 driver", "add_multiple", "add 2+ drivers"]:
+        if "no" in input_lower or "none" in input_lower or "just me" in input_lower:
+            state["additional_drivers"] = "none"
+        else:
+            state["additional_drivers"] = "add"
     
     # Telematics
     if state.get("additional_drivers") and not state.get("telematics_consent"):
-        if input_lower in ["yes", "yes, save 5%!", "no", "no thanks"]:
-            state["telematics_consent"] = "yes" if "yes" in input_lower else "no"
+        if "yes" in input_lower or "save" in input_lower:
+            state["telematics_consent"] = "yes"
+        elif input_lower in ["no", "no thanks"]:
+            state["telematics_consent"] = "no"
+    
+    # View quote
+    if input_lower in ["view_quote", "view my quote"]:
+        state["view_quote"] = True
+    
+    # Accept quote
+    if input_lower in ["accept_quote", "✓ accept & generate policy", "accept & generate policy"]:
+        state["quote_accepted"] = True
     
     return state
 
