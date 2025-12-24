@@ -280,7 +280,7 @@ class ComprehensiveMotorInsuranceTest:
             return False
             
         # Check for quote summary card
-        if 'message' in response and 'cards' in response['message']:
+        if 'message' in response and 'cards' in response['message'] and response['message']['cards']:
             cards = response['message']['cards']
             quote_card = next((card for card in cards if card.get('type') == 'quote_summary'), None)
             if quote_card:
@@ -288,7 +288,7 @@ class ComprehensiveMotorInsuranceTest:
             else:
                 self.log("   ⚠️ No quote summary card found")
         else:
-            self.log("   ⚠️ No cards in response")
+            self.log("   ⚠️ No cards in response (LLM may not have returned cards format)")
             
         # Step 13: Generate Documents
         success, response = self.run_test(
