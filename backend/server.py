@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,18 +7,26 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
-
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+import json
+import asyncio
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import inch
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ.get('DB_NAME', 'motor_insurance')]
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -25,46 +34,1174 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+# ============ MODELS ============
+
+class SessionCreate(BaseModel):
+    user_agent: Optional[str] = None
+
+class Session(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    current_agent: str = "orchestrator"
+    state: Dict[str, Any] = Field(default_factory=dict)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class MessageCreate(BaseModel):
+    session_id: str
+    content: str
+    quick_reply_value: Optional[str] = None
 
-# Add your routes to the router instead of directly to app
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    role: str  # user, assistant, system
+    content: str
+    agent: Optional[str] = None
+    quick_replies: Optional[List[Dict[str, str]]] = None
+    cards: Optional[List[Dict[str, Any]]] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QuoteRequest(BaseModel):
+    session_id: str
+
+class Quote(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    vehicle_type: str
+    vehicle_make: str
+    vehicle_model: str
+    engine_capacity: str
+    coverage_type: str
+    plan_name: str
+    base_premium: float
+    risk_loading: float
+    ncd_discount: float
+    telematics_discount: float
+    final_premium: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ============ MOCK DATA ============
+
+VEHICLE_MAKES = {
+    "car": ["Toyota", "Honda", "BMW", "Mercedes-Benz", "Audi", "Mazda", "Hyundai", "Kia", "Nissan", "Volkswagen"],
+    "motorcycle": ["Honda", "Yamaha", "Kawasaki", "Suzuki", "Ducati", "Harley-Davidson", "BMW", "KTM"]
+}
+
+VEHICLE_MODELS = {
+    "Toyota": ["Camry", "Corolla", "RAV4", "Prius", "Altis"],
+    "Honda": ["Civic", "Accord", "CR-V", "Jazz", "City", "CBR500R", "CB650R", "PCX"],
+    "BMW": ["3 Series", "5 Series", "X3", "X5", "G 310 R", "R 1250 GS"],
+    "Mercedes-Benz": ["C-Class", "E-Class", "GLC", "A-Class"],
+    "Audi": ["A4", "A6", "Q5", "Q7"],
+    "Mazda": ["3", "6", "CX-5", "CX-30"],
+    "Hyundai": ["Elantra", "Tucson", "Santa Fe", "Ioniq"],
+    "Kia": ["Cerato", "Sportage", "Sorento", "Stinger"],
+    "Nissan": ["Sylphy", "X-Trail", "Kicks", "Serena"],
+    "Volkswagen": ["Golf", "Passat", "Tiguan", "Touareg"],
+    "Yamaha": ["YZF-R3", "MT-07", "XMAX", "NMAX"],
+    "Kawasaki": ["Ninja 400", "Z650", "Versys 650"],
+    "Suzuki": ["GSX-R600", "SV650", "V-Strom 650"],
+    "Ducati": ["Panigale V2", "Monster", "Multistrada"],
+    "Harley-Davidson": ["Iron 883", "Street Glide", "Fat Boy"],
+    "KTM": ["Duke 390", "RC 390", "Adventure 390"]
+}
+
+ENGINE_CAPACITIES = {
+    "car": ["1000cc - 1600cc", "1601cc - 2000cc", "2001cc - 3000cc", "Above 3000cc"],
+    "motorcycle": ["Below 200cc", "200cc - 400cc", "401cc - 650cc", "Above 650cc"]
+}
+
+# Mock LTA vehicle data
+MOCK_LTA_DATA = {
+    "SGX1234A": {
+        "make": "Toyota",
+        "model": "Camry",
+        "engine_cc": "2000cc",
+        "year": 2022,
+        "road_tax_valid": True,
+        "accident_history": []
+    },
+    "SBA5678B": {
+        "make": "Honda",
+        "model": "Civic",
+        "engine_cc": "1500cc",
+        "year": 2021,
+        "road_tax_valid": True,
+        "accident_history": [{"date": "2023-05-15", "severity": "minor"}]
+    }
+}
+
+# Mock Singpass data
+MOCK_SINGPASS_DATA = {
+    "S1234567A": {
+        "full_name": "Tan Ah Kow",
+        "nric": "S1234567A",
+        "dob": "1985-06-15",
+        "gender": "Male",
+        "marital_status": "Married",
+        "phone": "+6591234567",
+        "email": "tan.ahkow@email.com",
+        "address": "123 Orchard Road, #08-01, Singapore 238857",
+        "driving_license": {
+            "class": "3",
+            "issue_date": "2005-03-20",
+            "expiry_date": "2030-03-19"
+        }
+    }
+}
+
+# ============ AGENT SYSTEM PROMPTS ============
+
+ORCHESTRATOR_PROMPT = """You are Jiffy Jane, a friendly and efficient motor insurance assistant for Income Insurance Singapore. 
+Your role is to guide users through the motor insurance quote and purchase process.
+
+PERSONALITY:
+- Warm, helpful, and professional
+- Use simple, clear language
+- Add occasional Singapore flavor (lah, can, shiok) sparingly
+- Always be encouraging and supportive
+
+FLOW OVERVIEW:
+1. Welcome and ask about vehicle type (Car or Two-Wheeler)
+2. Collect vehicle information (make, model, engine capacity, off-peak status)
+3. Present coverage options (Third Party or Comprehensive)
+4. Show plan comparison (Drive Premium vs Drive Classic)
+5. Collect driver identity (offer Singpass option)
+6. Check driver eligibility and claims history
+7. Ask about additional drivers
+8. Offer telematics opt-in
+9. Calculate and present premium quote
+10. Generate policy documents
+
+RESPONSE FORMAT:
+Always respond in JSON format with:
+{
+    "message": "Your conversational message here",
+    "quick_replies": [{"label": "Button Label", "value": "button_value"}],
+    "next_agent": "agent_name",
+    "data_collected": {"key": "value"},
+    "show_cards": false
+}
+
+Current session state: {state}
+User message: {user_message}
+
+Based on the current state and user message, provide an appropriate response. Guide the user through the process step by step.
+"""
+
+INTAKE_AGENT_PROMPT = """You are the Vehicle Intake Agent for Income Insurance. Collect vehicle primary information.
+
+Your task:
+1. Confirm or ask for vehicle type (car/motorcycle)
+2. Ask for vehicle make
+3. Ask for vehicle model
+4. Ask for engine capacity
+5. Ask about off-peak status (for cars only)
+
+Available makes for cars: {car_makes}
+Available makes for motorcycles: {motorcycle_makes}
+
+Current session state: {state}
+User message: {user_message}
+
+Respond in JSON format:
+{{
+    "message": "Your message",
+    "quick_replies": [{{"label": "Option", "value": "value"}}],
+    "next_agent": "coverage" or "intake" (if more info needed),
+    "data_collected": {{"field": "value"}}
+}}
+"""
+
+COVERAGE_AGENT_PROMPT = """You are the Coverage Agent for Income Insurance. Present coverage options to the user.
+
+Coverage Types:
+1. Third Party Only - Basic coverage for third party liability
+2. Comprehensive - Full coverage including own damage, theft, and third party
+
+Plans:
+1. Drive Premium Plan - Higher coverage limits, 24/7 roadside assistance, windscreen coverage
+2. Drive Classic Plan - Standard coverage, essential protection
+
+Current vehicle: {vehicle_type} - {vehicle_make} {vehicle_model}
+Current session state: {state}
+User message: {user_message}
+
+Respond in JSON format with coverage comparison cards when appropriate:
+{{
+    "message": "Your message",
+    "quick_replies": [{{"label": "Plan Option", "value": "value"}}],
+    "next_agent": "driver_identity" or "coverage",
+    "data_collected": {{"coverage_type": "value", "plan_name": "value"}},
+    "show_cards": true,
+    "cards": [
+        {{
+            "type": "coverage_comparison",
+            "plans": [
+                {{"name": "Drive Premium", "price": "$XXX/year", "features": ["Feature 1", "Feature 2"]}},
+                {{"name": "Drive Classic", "price": "$XXX/year", "features": ["Feature 1", "Feature 2"]}}
+            ]
+        }}
+    ]
+}}
+"""
+
+DRIVER_IDENTITY_AGENT_PROMPT = """You are the Driver Identity Agent for Income Insurance. Collect driver information.
+
+Options:
+1. Retrieve via Singpass (quick and convenient)
+2. Manual entry
+
+If manual entry, collect:
+- Full Name
+- NRIC / Passport
+- Date of Birth
+- Gender
+- Marital Status
+- Phone
+- Email
+- Address
+
+Current session state: {state}
+User message: {user_message}
+
+Respond in JSON format:
+{{
+    "message": "Your message",
+    "quick_replies": [{{"label": "Option", "value": "value"}}],
+    "next_agent": "driver_eligibility" or "driver_identity",
+    "data_collected": {{"driver_field": "value"}},
+    "singpass_retrieved": true/false
+}}
+"""
+
+RISK_ASSESSMENT_PROMPT = """You are the Risk Assessment Agent for Income Insurance. Assess driver and vehicle risk.
+
+Consider:
+- Driver age and experience
+- Claims history
+- Vehicle type and value
+- Additional drivers
+
+Risk factors:
+- No claims in 3 years: Low risk, eligible for NCD
+- 1 minor claim: Medium risk
+- Multiple claims or major claim: High risk, may need loading
+
+Current session state: {state}
+User message: {user_message}
+
+Respond in JSON format:
+{{
+    "message": "Your message explaining risk assessment",
+    "quick_replies": [{{"label": "Continue", "value": "continue"}}],
+    "next_agent": "pricing",
+    "data_collected": {{"risk_score": "low/medium/high", "ncd_eligible": true/false}}
+}}
+"""
+
+PRICING_AGENT_PROMPT = """You are the Pricing Agent for Income Insurance. Calculate and present premium.
+
+Base Premium Calculation:
+- Car 1000-1600cc: $800-1200/year
+- Car 1601-2000cc: $1000-1500/year
+- Car 2001-3000cc: $1200-1800/year
+- Car >3000cc: $1500-2500/year
+- Motorcycle <400cc: $300-500/year
+- Motorcycle 400-650cc: $500-800/year
+- Motorcycle >650cc: $800-1200/year
+
+Adjustments:
+- Comprehensive vs Third Party: +40% for Comprehensive
+- Premium Plan vs Classic: +20% for Premium
+- NCD (No Claims Discount): -10% to -50%
+- Telematics opt-in: -5%
+- Risk loading: +10% to +30% for high risk
+
+Current session state: {state}
+User message: {user_message}
+
+Calculate and respond in JSON format with quote details:
+{{
+    "message": "Here's your personalized quote!",
+    "quick_replies": [{{"label": "Proceed to Documents", "value": "proceed"}}],
+    "next_agent": "document",
+    "data_collected": {{
+        "base_premium": 1200,
+        "coverage_loading": 480,
+        "plan_loading": 240,
+        "ncd_discount": -336,
+        "telematics_discount": 0,
+        "risk_loading": 0,
+        "final_premium": 1584
+    }},
+    "show_cards": true,
+    "cards": [
+        {{
+            "type": "quote_summary",
+            "plan_name": "Drive Premium",
+            "coverage_type": "Comprehensive",
+            "premium": "$1,584/year",
+            "breakdown": [
+                {{"item": "Base Premium", "amount": "$1,200"}},
+                {{"item": "Coverage (Comprehensive)", "amount": "+$480"}},
+                {{"item": "Plan (Premium)", "amount": "+$240"}},
+                {{"item": "NCD Discount (20%)", "amount": "-$336"}}
+            ]
+        }}
+    ]
+}}
+"""
+
+DOCUMENT_AGENT_PROMPT = """You are the Document Agent for Income Insurance. Generate policy documents.
+
+Documents to generate:
+1. Policy Summary
+2. Coverage Details
+3. Terms and Conditions
+4. Premium Breakdown
+
+Current session state: {state}
+User message: {user_message}
+
+Respond in JSON format:
+{{
+    "message": "Great news! Your policy documents are ready for review.",
+    "quick_replies": [
+        {{"label": "View Policy Summary", "value": "view_summary"}},
+        {{"label": "Download PDF", "value": "download_pdf"}}
+    ],
+    "next_agent": "complete",
+    "data_collected": {{"documents_ready": true}},
+    "show_cards": true,
+    "cards": [
+        {{
+            "type": "policy_document",
+            "policy_number": "INC-2024-XXXXX",
+            "vehicle": "Toyota Camry",
+            "coverage": "Comprehensive",
+            "plan": "Drive Premium",
+            "premium": "$1,584/year",
+            "start_date": "01 Jan 2025",
+            "end_date": "31 Dec 2025"
+        }}
+    ]
+}}
+"""
+
+# ============ LLM CHAT HANDLER ============
+
+async def get_agent_response(session_id: str, user_message: str, state: dict, agent: str) -> dict:
+    """Get response from the appropriate agent using LLM"""
+    api_key = os.environ.get('EMERGENT_LLM_KEY')
+    
+    if not api_key:
+        logger.error("EMERGENT_LLM_KEY not found")
+        raise HTTPException(status_code=500, detail="LLM API key not configured")
+    
+    # Select appropriate system prompt based on agent
+    prompts = {
+        "orchestrator": ORCHESTRATOR_PROMPT,
+        "intake": INTAKE_AGENT_PROMPT,
+        "coverage": COVERAGE_AGENT_PROMPT,
+        "driver_identity": DRIVER_IDENTITY_AGENT_PROMPT,
+        "risk_assessment": RISK_ASSESSMENT_PROMPT,
+        "pricing": PRICING_AGENT_PROMPT,
+        "document": DOCUMENT_AGENT_PROMPT
+    }
+    
+    system_prompt = prompts.get(agent, ORCHESTRATOR_PROMPT)
+    
+    # Format the system prompt with state and available options
+    formatted_prompt = system_prompt.format(
+        state=json.dumps(state, indent=2),
+        user_message=user_message,
+        car_makes=", ".join(VEHICLE_MAKES.get("car", [])),
+        motorcycle_makes=", ".join(VEHICLE_MAKES.get("motorcycle", [])),
+        vehicle_type=state.get("vehicle_type", "Not specified"),
+        vehicle_make=state.get("vehicle_make", "Not specified"),
+        vehicle_model=state.get("vehicle_model", "Not specified")
+    )
+    
+    try:
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"{session_id}_{agent}_{datetime.now().timestamp()}",
+            system_message=formatted_prompt
+        ).with_model("openai", "gpt-4o")
+        
+        user_msg = UserMessage(text=user_message)
+        response = await chat.send_message(user_msg)
+        
+        # Parse JSON response
+        try:
+            # Try to extract JSON from the response
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
+            if json_start != -1 and json_end > json_start:
+                json_str = response[json_start:json_end]
+                return json.loads(json_str)
+            else:
+                return {
+                    "message": response,
+                    "quick_replies": [],
+                    "next_agent": agent,
+                    "data_collected": {}
+                }
+        except json.JSONDecodeError:
+            return {
+                "message": response,
+                "quick_replies": [],
+                "next_agent": agent,
+                "data_collected": {}
+            }
+            
+    except Exception as e:
+        logger.error(f"LLM error: {str(e)}")
+        # Fallback responses based on state
+        return get_fallback_response(state, agent, user_message)
+
+def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
+    """Provide fallback responses when LLM fails"""
+    user_lower = user_message.lower()
+    
+    # Check for vehicle type selection
+    if not state.get("vehicle_type"):
+        return {
+            "message": "Hi there! I'm Jiffy Jane, your motor insurance assistant! 🚗 Let's get you covered. Are you looking to insure a car or a motorcycle?",
+            "quick_replies": [
+                {"label": "🚗 Car", "value": "car"},
+                {"label": "🏍️ Motorcycle", "value": "motorcycle"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Vehicle type selected, ask for make
+    if state.get("vehicle_type") and not state.get("vehicle_make"):
+        vtype = state.get("vehicle_type")
+        makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
+        return {
+            "message": f"Great choice! Which brand is your {vtype}?",
+            "quick_replies": [{"label": m, "value": m} for m in makes[:6]],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Make selected, ask for model
+    if state.get("vehicle_make") and not state.get("vehicle_model"):
+        make = state.get("vehicle_make")
+        models = VEHICLE_MODELS.get(make, ["Other"])
+        return {
+            "message": f"Nice! What model is your {make}?",
+            "quick_replies": [{"label": m, "value": m} for m in models[:6]],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Model selected, ask for engine capacity
+    if state.get("vehicle_model") and not state.get("engine_capacity"):
+        vtype = state.get("vehicle_type", "car")
+        capacities = ENGINE_CAPACITIES.get(vtype, ENGINE_CAPACITIES["car"])
+        return {
+            "message": "What's the engine capacity?",
+            "quick_replies": [{"label": c, "value": c} for c in capacities],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Engine capacity selected, ask for off-peak (cars only) or move to coverage
+    if state.get("engine_capacity") and not state.get("off_peak") and state.get("vehicle_type") == "car":
+        return {
+            "message": "Is your car registered as an off-peak vehicle? (Red plates)",
+            "quick_replies": [
+                {"label": "Yes, Off-Peak", "value": "yes"},
+                {"label": "No, Normal", "value": "no"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Vehicle info complete, show coverage options
+    if state.get("engine_capacity") and not state.get("coverage_type"):
+        return {
+            "message": "Excellent! Now let's choose your coverage. Would you prefer Third Party coverage (basic) or Comprehensive coverage (full protection)?",
+            "quick_replies": [
+                {"label": "Third Party", "value": "third_party"},
+                {"label": "Comprehensive", "value": "comprehensive"}
+            ],
+            "next_agent": "coverage",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "coverage_comparison",
+                "plans": [
+                    {"name": "Third Party", "price": "From $500/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]},
+                    {"name": "Comprehensive", "price": "From $800/year", "features": ["All Third Party benefits", "Own damage coverage", "Theft protection", "Natural disaster coverage"]}
+                ]
+            }]
+        }
+    
+    # Coverage selected, show plan options
+    if state.get("coverage_type") and not state.get("plan_name"):
+        return {
+            "message": "Great! Now choose your plan:",
+            "quick_replies": [
+                {"label": "Drive Premium", "value": "Drive Premium"},
+                {"label": "Drive Classic", "value": "Drive Classic"}
+            ],
+            "next_agent": "coverage",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "plan_comparison",
+                "plans": [
+                    {"name": "Drive Premium", "price": "+20%", "features": ["Higher coverage limits ($100K)", "24/7 roadside assistance", "Windscreen coverage ($1K)", "Personal belongings ($2K)"], "recommended": True},
+                    {"name": "Drive Classic", "price": "Base", "features": ["Standard coverage ($50K)", "Business hours support", "Basic windscreen ($300)", "Personal belongings ($500)"]}
+                ]
+            }]
+        }
+    
+    # Plan selected, ask about Singpass
+    if state.get("plan_name") and not state.get("driver_info_method"):
+        return {
+            "message": "Perfect! Now I need to verify your identity. Would you like to retrieve your details via Singpass (faster) or enter them manually?",
+            "quick_replies": [
+                {"label": "Use Singpass", "value": "singpass"},
+                {"label": "Enter Manually", "value": "manual"}
+            ],
+            "next_agent": "driver_identity",
+            "data_collected": {}
+        }
+    
+    # Singpass or manual selected
+    if state.get("driver_info_method") == "singpass" and not state.get("singpass_consent"):
+        return {
+            "message": "I'll need your consent to retrieve your details from Singpass. By proceeding, you consent to Income Insurance accessing your personal data for insurance purposes as per PDPA guidelines. Do you consent?",
+            "quick_replies": [
+                {"label": "Yes, I Consent", "value": "consent_yes"},
+                {"label": "No, Enter Manually", "value": "consent_no"}
+            ],
+            "next_agent": "driver_identity",
+            "data_collected": {}
+        }
+    
+    # Singpass consent given, retrieve mock data
+    if state.get("singpass_consent") == "consent_yes" and not state.get("driver_name"):
+        mock_data = list(MOCK_SINGPASS_DATA.values())[0]
+        return {
+            "message": f"Details retrieved! Welcome, {mock_data['full_name']}! I've got your information from Singpass.",
+            "quick_replies": [
+                {"label": "Confirm Details", "value": "confirm"},
+                {"label": "Edit Details", "value": "edit"}
+            ],
+            "next_agent": "driver_eligibility",
+            "data_collected": {
+                "driver_name": mock_data["full_name"],
+                "driver_nric": mock_data["nric"],
+                "driver_dob": mock_data["dob"],
+                "driver_phone": mock_data["phone"],
+                "driver_email": mock_data["email"],
+                "driver_address": mock_data["address"],
+                "license_class": mock_data["driving_license"]["class"]
+            }
+        }
+    
+    # Ask about claims history
+    if state.get("driver_name") and not state.get("claims_history"):
+        return {
+            "message": "Have you made any motor insurance claims in the last 3 years?",
+            "quick_replies": [
+                {"label": "No Claims", "value": "no_claims"},
+                {"label": "1 Minor Claim", "value": "1_minor"},
+                {"label": "Multiple Claims", "value": "multiple"}
+            ],
+            "next_agent": "driver_eligibility",
+            "data_collected": {}
+        }
+    
+    # Ask about additional drivers
+    if state.get("claims_history") and not state.get("additional_drivers"):
+        return {
+            "message": "Would you like to add any additional named drivers to your policy?",
+            "quick_replies": [
+                {"label": "No, Just Me", "value": "none"},
+                {"label": "Yes, Add Driver", "value": "add"}
+            ],
+            "next_agent": "driver_eligibility",
+            "data_collected": {}
+        }
+    
+    # Ask about telematics
+    if state.get("additional_drivers") and not state.get("telematics_consent"):
+        return {
+            "message": "Would you like to opt-in for telematics? You can save up to 5% on your premium by allowing us to monitor your driving habits!",
+            "quick_replies": [
+                {"label": "Yes, Save 5%!", "value": "yes"},
+                {"label": "No Thanks", "value": "no"}
+            ],
+            "next_agent": "telematics",
+            "data_collected": {}
+        }
+    
+    # Calculate premium and show quote
+    if state.get("telematics_consent") and not state.get("final_premium"):
+        # Calculate premium
+        base = 1000
+        if state.get("vehicle_type") == "motorcycle":
+            base = 500
+        
+        engine = state.get("engine_capacity", "")
+        if "2000" in engine or "2001" in engine:
+            base *= 1.3
+        elif "3000" in engine:
+            base *= 1.6
+        
+        coverage_mult = 1.4 if state.get("coverage_type") == "comprehensive" else 1.0
+        plan_mult = 1.2 if state.get("plan_name") == "Drive Premium" else 1.0
+        
+        ncd = 0.2 if state.get("claims_history") == "no_claims" else 0
+        telematics = 0.05 if state.get("telematics_consent") == "yes" else 0
+        
+        premium = base * coverage_mult * plan_mult
+        ncd_amount = premium * ncd
+        telematics_amount = premium * telematics
+        final = premium - ncd_amount - telematics_amount
+        
+        return {
+            "message": f"🎉 Great news! Your personalized quote is ready!",
+            "quick_replies": [
+                {"label": "Generate Documents", "value": "generate"},
+                {"label": "Modify Quote", "value": "modify"}
+            ],
+            "next_agent": "pricing",
+            "data_collected": {
+                "base_premium": round(base, 2),
+                "final_premium": round(final, 2),
+                "ncd_discount": round(ncd_amount, 2),
+                "telematics_discount": round(telematics_amount, 2)
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "quote_summary",
+                "plan_name": state.get("plan_name", "Drive Classic"),
+                "coverage_type": state.get("coverage_type", "Third Party").replace("_", " ").title(),
+                "vehicle": f"{state.get('vehicle_make', '')} {state.get('vehicle_model', '')}",
+                "premium": f"${round(final, 2)}/year",
+                "breakdown": [
+                    {"item": "Base Premium", "amount": f"${round(base, 2)}"},
+                    {"item": f"Coverage ({state.get('coverage_type', 'third_party').replace('_', ' ').title()})", "amount": f"+${round(base * (coverage_mult - 1), 2)}"},
+                    {"item": f"Plan ({state.get('plan_name', 'Classic')})", "amount": f"+${round(base * coverage_mult * (plan_mult - 1), 2)}"},
+                    {"item": f"NCD Discount ({int(ncd*100)}%)", "amount": f"-${round(ncd_amount, 2)}"},
+                    {"item": f"Telematics Discount", "amount": f"-${round(telematics_amount, 2)}"}
+                ]
+            }]
+        }
+    
+    # Document generation
+    if state.get("final_premium"):
+        policy_num = f"INC-2024-{str(uuid.uuid4())[:8].upper()}"
+        return {
+            "message": "Your policy documents are ready! You can view the summary or download the full PDF.",
+            "quick_replies": [
+                {"label": "View Summary", "value": "view"},
+                {"label": "Download PDF", "value": "download"}
+            ],
+            "next_agent": "document",
+            "data_collected": {"policy_number": policy_num, "documents_ready": True},
+            "show_cards": True,
+            "cards": [{
+                "type": "policy_document",
+                "policy_number": policy_num,
+                "vehicle": f"{state.get('vehicle_make', '')} {state.get('vehicle_model', '')}",
+                "coverage": state.get("coverage_type", "").replace("_", " ").title(),
+                "plan": state.get("plan_name", ""),
+                "premium": f"${state.get('final_premium', 0)}/year",
+                "start_date": datetime.now().strftime("%d %b %Y"),
+                "end_date": (datetime.now().replace(year=datetime.now().year + 1)).strftime("%d %b %Y"),
+                "driver_name": state.get("driver_name", ""),
+                "ncd_percentage": "20%" if state.get("claims_history") == "no_claims" else "0%"
+            }]
+        }
+    
+    # Default fallback
+    return {
+        "message": "I'm here to help! Let me know what you'd like to do.",
+        "quick_replies": [
+            {"label": "Start New Quote", "value": "start"},
+            {"label": "Help", "value": "help"}
+        ],
+        "next_agent": "orchestrator",
+        "data_collected": {}
+    }
+
+# ============ API ROUTES ============
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Jiffy Jane Motor Insurance API", "status": "running"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+@api_router.post("/sessions", response_model=Session)
+async def create_session(input: SessionCreate):
+    """Create a new chat session"""
+    session = Session(
+        state={
+            "step": "welcome",
+            "vehicle_type": None,
+            "vehicle_make": None,
+            "vehicle_model": None,
+            "engine_capacity": None,
+            "off_peak": None,
+            "coverage_type": None,
+            "plan_name": None,
+            "driver_info_method": None,
+            "singpass_consent": None,
+            "driver_name": None,
+            "claims_history": None,
+            "additional_drivers": None,
+            "telematics_consent": None,
+            "final_premium": None,
+            "policy_number": None
+        }
+    )
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    doc = session.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    await db.sessions.insert_one(doc)
+    return session
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/sessions/{session_id}", response_model=Session)
+async def get_session(session_id: str):
+    """Get session by ID"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    if isinstance(session['created_at'], str):
+        session['created_at'] = datetime.fromisoformat(session['created_at'])
     
-    return status_checks
+    return session
+
+@api_router.post("/chat")
+async def send_message(input: MessageCreate):
+    """Send a message and get AI response"""
+    # Get session
+    session = await db.sessions.find_one({"id": input.session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    state = session.get("state", {})
+    current_agent = session.get("current_agent", "orchestrator")
+    
+    # Save user message
+    user_msg = Message(
+        session_id=input.session_id,
+        role="user",
+        content=input.content
+    )
+    user_doc = user_msg.model_dump()
+    user_doc['created_at'] = user_doc['created_at'].isoformat()
+    await db.messages.insert_one(user_doc)
+    
+    # Process quick reply value if present
+    message_content = input.quick_reply_value or input.content
+    
+    # Update state based on user input
+    updated_state = update_state_from_input(state, message_content, current_agent)
+    
+    # Get AI response
+    response = await get_agent_response(
+        input.session_id,
+        message_content,
+        updated_state,
+        current_agent
+    )
+    
+    # Merge collected data into state
+    if response.get("data_collected"):
+        updated_state.update(response["data_collected"])
+    
+    # Update session with new state and agent
+    next_agent = response.get("next_agent", current_agent)
+    await db.sessions.update_one(
+        {"id": input.session_id},
+        {"$set": {"state": updated_state, "current_agent": next_agent}}
+    )
+    
+    # Save assistant message
+    assistant_msg = Message(
+        session_id=input.session_id,
+        role="assistant",
+        content=response.get("message", ""),
+        agent=next_agent,
+        quick_replies=response.get("quick_replies"),
+        cards=response.get("cards")
+    )
+    assistant_doc = assistant_msg.model_dump()
+    assistant_doc['created_at'] = assistant_doc['created_at'].isoformat()
+    await db.messages.insert_one(assistant_doc)
+    
+    return {
+        "message": assistant_msg.model_dump(),
+        "state": updated_state,
+        "current_agent": next_agent
+    }
+
+def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
+    """Update session state based on user input"""
+    input_lower = user_input.lower()
+    
+    # Vehicle type
+    if input_lower in ["car", "motorcycle", "🚗 car", "🏍️ motorcycle"]:
+        state["vehicle_type"] = "car" if "car" in input_lower else "motorcycle"
+    
+    # Vehicle make
+    all_makes = VEHICLE_MAKES.get("car", []) + VEHICLE_MAKES.get("motorcycle", [])
+    for make in all_makes:
+        if make.lower() == input_lower or make.lower() in input_lower:
+            state["vehicle_make"] = make
+            break
+    
+    # Vehicle model
+    for make, models in VEHICLE_MODELS.items():
+        for model in models:
+            if model.lower() == input_lower or model.lower() in input_lower:
+                state["vehicle_model"] = model
+                break
+    
+    # Engine capacity
+    for vtype, capacities in ENGINE_CAPACITIES.items():
+        for cap in capacities:
+            if cap.lower() == input_lower or cap.lower() in input_lower:
+                state["engine_capacity"] = cap
+                break
+    
+    # Off-peak
+    if input_lower in ["yes", "yes, off-peak", "no", "no, normal"]:
+        if not state.get("off_peak") and state.get("vehicle_type") == "car" and state.get("engine_capacity"):
+            state["off_peak"] = "yes" in input_lower
+    
+    # Coverage type
+    if input_lower in ["third party", "third_party", "comprehensive"]:
+        state["coverage_type"] = "comprehensive" if "comprehensive" in input_lower else "third_party"
+    
+    # Plan name
+    if "premium" in input_lower or "classic" in input_lower:
+        state["plan_name"] = "Drive Premium" if "premium" in input_lower else "Drive Classic"
+    
+    # Driver info method
+    if input_lower in ["singpass", "use singpass", "manual", "enter manually"]:
+        state["driver_info_method"] = "singpass" if "singpass" in input_lower else "manual"
+    
+    # Singpass consent
+    if "consent" in input_lower or input_lower in ["yes, i consent", "consent_yes", "consent_no"]:
+        state["singpass_consent"] = "consent_yes" if "yes" in input_lower else "consent_no"
+    
+    # Claims history
+    if input_lower in ["no claims", "no_claims", "1 minor claim", "1_minor", "multiple claims", "multiple"]:
+        if "no" in input_lower:
+            state["claims_history"] = "no_claims"
+        elif "1" in input_lower or "minor" in input_lower:
+            state["claims_history"] = "1_minor"
+        else:
+            state["claims_history"] = "multiple"
+    
+    # Additional drivers
+    if input_lower in ["no, just me", "none", "yes, add driver", "add"]:
+        state["additional_drivers"] = "none" if "no" in input_lower or "none" in input_lower else "add"
+    
+    # Telematics
+    if state.get("additional_drivers") and not state.get("telematics_consent"):
+        if input_lower in ["yes", "yes, save 5%!", "no", "no thanks"]:
+            state["telematics_consent"] = "yes" if "yes" in input_lower else "no"
+    
+    return state
+
+@api_router.get("/messages/{session_id}", response_model=List[Message])
+async def get_messages(session_id: str):
+    """Get all messages for a session"""
+    messages = await db.messages.find(
+        {"session_id": session_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(1000)
+    
+    for msg in messages:
+        if isinstance(msg['created_at'], str):
+            msg['created_at'] = datetime.fromisoformat(msg['created_at'])
+    
+    return messages
+
+@api_router.post("/welcome/{session_id}")
+async def get_welcome_message(session_id: str):
+    """Get initial welcome message"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    welcome_msg = Message(
+        session_id=session_id,
+        role="assistant",
+        content="Hi there! I'm Jiffy Jane, your friendly motor insurance assistant from Income Insurance! 🚗 I'll help you get a quick quote for your vehicle. Are you looking to insure a car or a motorcycle?",
+        agent="orchestrator",
+        quick_replies=[
+            {"label": "🚗 Car", "value": "car"},
+            {"label": "🏍️ Motorcycle", "value": "motorcycle"}
+        ]
+    )
+    
+    doc = welcome_msg.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.messages.insert_one(doc)
+    
+    return welcome_msg
+
+@api_router.get("/vehicle-makes/{vehicle_type}")
+async def get_vehicle_makes(vehicle_type: str):
+    """Get available vehicle makes"""
+    makes = VEHICLE_MAKES.get(vehicle_type.lower(), [])
+    return {"makes": makes}
+
+@api_router.get("/vehicle-models/{make}")
+async def get_vehicle_models(make: str):
+    """Get available vehicle models for a make"""
+    models = VEHICLE_MODELS.get(make, [])
+    return {"models": models}
+
+@api_router.get("/lta-lookup/{registration_number}")
+async def lta_vehicle_lookup(registration_number: str):
+    """Mock LTA vehicle lookup"""
+    data = MOCK_LTA_DATA.get(registration_number.upper())
+    if not data:
+        # Generate mock data for any registration
+        return {
+            "found": True,
+            "data": {
+                "make": "Toyota",
+                "model": "Camry",
+                "engine_cc": "2000cc",
+                "year": 2022,
+                "road_tax_valid": True,
+                "accident_history": []
+            }
+        }
+    return {"found": True, "data": data}
+
+@api_router.get("/singpass-retrieve/{nric}")
+async def singpass_retrieve(nric: str):
+    """Mock Singpass data retrieval"""
+    data = MOCK_SINGPASS_DATA.get(nric.upper())
+    if not data:
+        # Return mock data for any NRIC
+        return {
+            "found": True,
+            "data": list(MOCK_SINGPASS_DATA.values())[0]
+        }
+    return {"found": True, "data": data}
+
+@api_router.post("/generate-quote/{session_id}")
+async def generate_quote(session_id: str):
+    """Generate a formal quote"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    state = session.get("state", {})
+    
+    quote = Quote(
+        session_id=session_id,
+        vehicle_type=state.get("vehicle_type", "car"),
+        vehicle_make=state.get("vehicle_make", ""),
+        vehicle_model=state.get("vehicle_model", ""),
+        engine_capacity=state.get("engine_capacity", ""),
+        coverage_type=state.get("coverage_type", "third_party"),
+        plan_name=state.get("plan_name", "Drive Classic"),
+        base_premium=state.get("base_premium", 0),
+        risk_loading=0,
+        ncd_discount=state.get("ncd_discount", 0),
+        telematics_discount=state.get("telematics_discount", 0),
+        final_premium=state.get("final_premium", 0)
+    )
+    
+    doc = quote.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.quotes.insert_one(doc)
+    
+    return quote
+
+@api_router.get("/document/{session_id}/pdf")
+async def generate_pdf_document(session_id: str):
+    """Generate PDF policy document"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    state = session.get("state", {})
+    
+    # Create PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=50, bottomMargin=50)
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#F96302'),
+        spaceAfter=30
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1F2937'),
+        spaceBefore=20,
+        spaceAfter=10
+    )
+    
+    story = []
+    
+    # Header
+    story.append(Paragraph("Income Insurance", title_style))
+    story.append(Paragraph("Motor Insurance Policy Summary", styles['Heading2']))
+    story.append(Spacer(1, 20))
+    
+    # Policy details
+    policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
+    
+    story.append(Paragraph("Policy Details", heading_style))
+    policy_data = [
+        ["Policy Number:", policy_number],
+        ["Effective Date:", datetime.now().strftime("%d %B %Y")],
+        ["Expiry Date:", (datetime.now().replace(year=datetime.now().year + 1)).strftime("%d %B %Y")],
+    ]
+    
+    t = Table(policy_data, colWidths=[2*inch, 4*inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Policyholder details
+    story.append(Paragraph("Policyholder Information", heading_style))
+    holder_data = [
+        ["Name:", state.get("driver_name", "N/A")],
+        ["NRIC:", state.get("driver_nric", "N/A")],
+        ["Contact:", state.get("driver_phone", "N/A")],
+        ["Email:", state.get("driver_email", "N/A")],
+    ]
+    
+    t = Table(holder_data, colWidths=[2*inch, 4*inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Vehicle details
+    story.append(Paragraph("Vehicle Information", heading_style))
+    vehicle_data = [
+        ["Vehicle Type:", state.get("vehicle_type", "N/A").title()],
+        ["Make:", state.get("vehicle_make", "N/A")],
+        ["Model:", state.get("vehicle_model", "N/A")],
+        ["Engine Capacity:", state.get("engine_capacity", "N/A")],
+    ]
+    
+    t = Table(vehicle_data, colWidths=[2*inch, 4*inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Coverage details
+    story.append(Paragraph("Coverage Details", heading_style))
+    coverage_data = [
+        ["Coverage Type:", state.get("coverage_type", "N/A").replace("_", " ").title()],
+        ["Plan:", state.get("plan_name", "N/A")],
+        ["Annual Premium:", f"${state.get('final_premium', 0):.2f}"],
+        ["NCD Discount:", f"${state.get('ncd_discount', 0):.2f}"],
+    ]
+    
+    t = Table(coverage_data, colWidths=[2*inch, 4*inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 30))
+    
+    # Footer
+    story.append(Paragraph("This is a computer-generated document. No signature is required.", styles['Normal']))
+    story.append(Paragraph("Income Insurance Limited. All rights reserved.", styles['Normal']))
+    
+    doc.build(story)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=policy_{policy_number}.pdf"}
+    )
+
+@api_router.get("/document/{session_id}/html")
+async def generate_html_document(session_id: str):
+    """Generate HTML policy document"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    state = session.get("state", {})
+    policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
+    
+    return {
+        "policy_number": policy_number,
+        "effective_date": datetime.now().strftime("%d %B %Y"),
+        "expiry_date": (datetime.now().replace(year=datetime.now().year + 1)).strftime("%d %B %Y"),
+        "policyholder": {
+            "name": state.get("driver_name", "N/A"),
+            "nric": state.get("driver_nric", "N/A"),
+            "phone": state.get("driver_phone", "N/A"),
+            "email": state.get("driver_email", "N/A"),
+            "address": state.get("driver_address", "N/A")
+        },
+        "vehicle": {
+            "type": state.get("vehicle_type", "N/A"),
+            "make": state.get("vehicle_make", "N/A"),
+            "model": state.get("vehicle_model", "N/A"),
+            "engine_capacity": state.get("engine_capacity", "N/A")
+        },
+        "coverage": {
+            "type": state.get("coverage_type", "N/A").replace("_", " ").title(),
+            "plan": state.get("plan_name", "N/A"),
+            "premium": state.get("final_premium", 0),
+            "ncd_discount": state.get("ncd_discount", 0),
+            "telematics_discount": state.get("telematics_discount", 0)
+        }
+    }
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -76,13 +1213,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
