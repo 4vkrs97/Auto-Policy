@@ -1,5 +1,4 @@
-import { Check, Star } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check, Star, Shield, Award } from "lucide-react";
 
 export const CoverageCard = ({ card, onSelect }) => {
   const plans = card.plans || [];
@@ -9,10 +8,7 @@ export const CoverageCard = ({ card, onSelect }) => {
       {plans.map((plan, index) => (
         <div
           key={index}
-          className={cn(
-            "coverage-card cursor-pointer",
-            plan.recommended && "recommended"
-          )}
+          className={`coverage-card ${plan.recommended ? 'recommended' : ''}`}
           onClick={() => onSelect(plan.name, plan.name)}
           data-testid={`coverage-plan-${index}`}
         >
@@ -24,11 +20,20 @@ export const CoverageCard = ({ card, onSelect }) => {
           )}
           
           <div className="flex items-start justify-between mb-3">
-            <div>
-              <h3 className="font-semibold text-[#1F2937] font-['Outfit']">
-                {plan.name}
-              </h3>
-              <p className="text-[#F96302] font-semibold">{plan.price}</p>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${plan.recommended ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                {plan.recommended ? (
+                  <Award className="w-5 h-5 text-[#F96302]" />
+                ) : (
+                  <Shield className="w-5 h-5 text-gray-500" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#1F2937] font-['Outfit']">
+                  {plan.name}
+                </h3>
+                <p className="text-[#F96302] font-semibold text-sm">{plan.price}</p>
+              </div>
             </div>
           </div>
           
@@ -41,8 +46,8 @@ export const CoverageCard = ({ card, onSelect }) => {
             ))}
           </ul>
           
-          <div className="mt-4 pt-3 border-t border-[#E5E5EA]">
-            <span className="text-sm text-[#F96302] font-medium">
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <span className="text-sm text-[#F96302] font-medium cursor-pointer hover:underline">
               Select this plan →
             </span>
           </div>
