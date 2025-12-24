@@ -3,10 +3,10 @@ export const QuickReplies = ({ replies, onSelect }) => {
 
   return (
     <div 
-      className="px-4 py-3 bg-white/50 backdrop-blur-sm border-t border-[#E5E5EA]"
+      className="py-3 bg-white/50 backdrop-blur-sm border-t border-[#E5E5EA]"
       data-testid="quick-replies-container"
     >
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 flex-wrap justify-start">
         {replies.map((reply, index) => (
           <button
             key={index}
