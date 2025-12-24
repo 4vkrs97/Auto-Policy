@@ -1191,14 +1191,14 @@ async def generate_html_document(session_id: str):
             "address": state.get("driver_address", "N/A")
         },
         "vehicle": {
-            "type": state.get("vehicle_type", "N/A"),
-            "make": state.get("vehicle_make", "N/A"),
-            "model": state.get("vehicle_model", "N/A"),
-            "engine_capacity": state.get("engine_capacity", "N/A")
+            "type": state.get("vehicle_type") or "N/A",
+            "make": state.get("vehicle_make") or "N/A",
+            "model": state.get("vehicle_model") or "N/A",
+            "engine_capacity": state.get("engine_capacity") or "N/A"
         },
         "coverage": {
-            "type": state.get("coverage_type", "N/A").replace("_", " ").title(),
-            "plan": state.get("plan_name", "N/A"),
+            "type": (state.get("coverage_type") or "N/A").replace("_", " ").title() if state.get("coverage_type") else "N/A",
+            "plan": state.get("plan_name") or "N/A",
             "premium": state.get("final_premium", 0),
             "ncd_discount": state.get("ncd_discount", 0),
             "telematics_discount": state.get("telematics_discount", 0)
