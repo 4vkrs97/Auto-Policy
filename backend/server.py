@@ -1177,6 +1177,13 @@ async def generate_pdf_document(session_id: str):
     # Policy details
     policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
     
+    # Calculate Claim Intimation Date and Incident Date & Time
+    from datetime import timedelta
+    now = datetime.now()
+    claim_intimation_date = now.strftime("%d %B %Y, %I:%M %p")
+    incident_datetime = now - timedelta(hours=27, minutes=27)
+    incident_date_str = incident_datetime.strftime("%d %B %Y, %I:%M %p")
+    
     story.append(Paragraph("Policy Details", heading_style))
     policy_data = [
         ["Policy Number:", policy_number],
@@ -1190,6 +1197,25 @@ async def generate_pdf_document(session_id: str):
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Claim Information Section
+    story.append(Paragraph("Claim Information", heading_style))
+    claim_data = [
+        ["Claim Intimation Date:", claim_intimation_date],
+        ["Incident Date & Time:", incident_date_str],
+    ]
+    
+    t = Table(claim_data, colWidths=[2*inch, 4*inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FEF3C7')),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#F59E0B')),
     ]))
     story.append(t)
     story.append(Spacer(1, 20))
