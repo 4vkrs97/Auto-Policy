@@ -906,16 +906,43 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     if input_lower in ["car", "motorcycle", "🚗 car", "🏍️ motorcycle"]:
         state["vehicle_type"] = "car" if "car" in input_lower else "motorcycle"
     
-    # Registration number (Singapore format: SXX####X)
-    if state.get("vehicle_type") and not state.get("registration_number"):
-        import re
-        if re.match(r'^[A-Z]{2,3}\d{1,4}[A-Z]?$', input_upper) or input_upper in ["SGX1234A", "SBA5678B"]:
-            state["registration_number"] = input_upper
-        elif input_lower == "manual_entry":
-            state["registration_number"] = "MANUAL"
+    # Vehicle make - check against known makes
+    if state.get("vehicle_type") and not state.get("vehicle_make"):
+        all_makes = VEHICLE_MAKES.get("car", []) + VEHICLE_MAKES.get("motorcycle", [])
+        for make in all_makes:
+            if make.lower() == input_lower or make.lower() in input_lower:
+                state["vehicle_make"] = make
+                break
+    
+    # Vehicle model - check against known models
+    if state.get("vehicle_make") and not state.get("vehicle_model"):
+        make = state.get("vehicle_make")
+        models = VEHICLE_MODELS.get(make, [])
+        for model in models:
+            if model.lower() == input_lower or model.lower() in input_lower:
+                state["vehicle_model"] = model
+                break
+        # Also accept any input as model if not in predefined list
+        if not state.get("vehicle_model") and input_lower not in ["car", "motorcycle"]:
+            state["vehicle_model"] = user_input
+    
+    # Engine capacity
+    if state.get("vehicle_model") and not state.get("engine_capacity"):
+        for vtype, capacities in ENGINE_CAPACITIES.items():
+            for cap in capacities:
+                if cap.lower() == input_lower or cap.lower() in input_lower:
+                    state["engine_capacity"] = cap
+                    break
+    
+    # Off-peak for cars
+    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("off_peak") is None:
+        if "yes" in input_lower or "off-peak" in input_lower or "offpeak" in input_lower:
+            state["off_peak"] = "yes_offpeak"
+        elif "no" in input_lower or "regular" in input_lower:
+            state["off_peak"] = "no_offpeak"
     
     # Confirm vehicle
-    if input_lower in ["confirm_vehicle", "✓ confirm details", "confirm details"]:
+    if input_lower in ["confirm_vehicle", "✓ confirm & continue", "confirm & continue", "confirm details", "✓ confirm details"]:
         state["vehicle_confirmed"] = True
     
     # Coverage type
