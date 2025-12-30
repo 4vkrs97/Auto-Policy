@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Car, Shield, FileText, Clock, ChevronRight, Zap } from "lucide-react";
 
-const INCOME_LOGO = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/ywmks2cv_image.png";
+const INCOME_LOGO = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/d6i0a1n5_image.png";
 const JIFFY_JANE = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/1czfonbv_image.png";
 
 const features = [
