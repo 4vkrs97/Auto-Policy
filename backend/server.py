@@ -730,20 +730,9 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     # Quote accepted, generate policy document
     if state.get("final_premium"):
         policy_num = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
-        from datetime import datetime, timedelta
+        from datetime import datetime
         
-        # Current system date/time
         now = datetime.now()
-        
-        # Claim Intimation Date: Current system date
-        claim_intimation_date = now.strftime("%d %b %Y")
-        claim_intimation_datetime = now.strftime("%d %b %Y, %I:%M %p")
-        
-        # Incident Date & Time: Intimation Date - 27 hours 27 minutes
-        incident_datetime = now - timedelta(hours=27, minutes=27)
-        incident_date_str = incident_datetime.strftime("%d %b %Y, %I:%M %p")
-        
-        # Policy dates
         start_date = now.strftime("%d %b %Y")
         end_date = (now.replace(year=now.year + 1)).strftime("%d %b %Y")
         
@@ -754,11 +743,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 {"label": "Start New Quote", "value": "new_quote"}
             ],
             "next_agent": "document",
-            "data_collected": {
-                "documents_ready": True,
-                "claim_intimation_date": claim_intimation_datetime,
-                "incident_date_time": incident_date_str
-            },
+            "data_collected": {"documents_ready": True},
             "show_cards": True,
             "cards": [{
                 "type": "policy_document",
@@ -770,9 +755,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "start_date": start_date,
                 "end_date": end_date,
                 "driver_name": state.get("driver_name", "Tan Ah Kow"),
-                "ncd_percentage": f"{state.get('ncd_percent', 0)}%",
-                "claim_intimation_date": claim_intimation_datetime,
-                "incident_date_time": incident_date_str
+                "ncd_percentage": f"{state.get('ncd_percent', 0)}%"
             }]
         }
     
