@@ -258,7 +258,6 @@ export const ChatPage = () => {
             src={INCOME_LOGO} 
             alt="Income" 
             className="income-logo"
-            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </div>
         
