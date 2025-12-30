@@ -1,4 +1,4 @@
-import { FileText, Download, Calendar, User, Car, Shield, Clock, AlertCircle } from "lucide-react";
+import { FileText, Download, Calendar, User, Car, Shield } from "lucide-react";
 
 export const PolicyCard = ({ card, onDownload }) => {
   return (
@@ -14,32 +14,6 @@ export const PolicyCard = ({ card, onDownload }) => {
       </div>
 
       <div className="policy-card-body">
-        {/* Claim Dates Section */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-          <h4 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            Claim Information
-          </h4>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-amber-700 flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                Claim Intimation Date
-              </span>
-              <span className="font-medium text-amber-900">{card.claim_intimation_date}</span>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-amber-700 flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5" />
-                Incident Date & Time
-              </span>
-              <span className="font-medium text-amber-900">{card.incident_date_time}</span>
-            </div>
-          </div>
-        </div>
-
         {/* Policy Period */}
         <div className="policy-detail-row">
           <Calendar className="w-4 h-4 text-[#F96302]" />
