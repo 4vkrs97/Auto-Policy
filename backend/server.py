@@ -409,7 +409,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     """Provide fallback responses when LLM fails"""
     user_lower = user_message.lower()
     
-    # Check for vehicle type selection
+    # Step 1: Welcome - Ask for vehicle type
     if not state.get("vehicle_type"):
         return {
             "message": "Hi there! I'm Jiffy Jane, your friendly motor insurance assistant from Income Insurance! Let me help you get a quick quote. What type of vehicle would you like to insure?",
@@ -421,58 +421,81 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Vehicle type selected, ask for registration number
-    if state.get("vehicle_type") and not state.get("registration_number"):
+    # Step 2: Ask for vehicle make
+    if state.get("vehicle_type") and not state.get("vehicle_make"):
         vtype = state.get("vehicle_type")
+        makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
         return {
-            "message": f"Great! I'll help you insure your {vtype}. To speed things up, I can fetch your vehicle details automatically from LTA. Please enter your vehicle registration number (e.g., SGX1234A):",
+            "message": f"Great choice! Which brand is your {vtype}?",
+            "quick_replies": [{"label": make, "value": make} for make in makes[:8]],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 3: Ask for vehicle model
+    if state.get("vehicle_make") and not state.get("vehicle_model"):
+        make = state.get("vehicle_make")
+        models = VEHICLE_MODELS.get(make, ["Sedan", "SUV", "Hatchback", "Other"])
+        return {
+            "message": f"Nice! What model is your {make}?",
+            "quick_replies": [{"label": model, "value": model} for model in models[:6]],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 4: Ask for engine capacity
+    if state.get("vehicle_model") and not state.get("engine_capacity"):
+        vtype = state.get("vehicle_type", "car")
+        capacities = ENGINE_CAPACITIES.get(vtype, ENGINE_CAPACITIES["car"])
+        return {
+            "message": "What's the engine capacity of your vehicle?",
+            "quick_replies": [{"label": cap, "value": cap} for cap in capacities],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 5: Ask about off-peak (for cars only)
+    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("off_peak") is None:
+        return {
+            "message": "Is your car registered as an off-peak vehicle? (Weekend/Red plate car)",
             "quick_replies": [
-                {"label": "SGX1234A (Demo)", "value": "SGX1234A"},
-                {"label": "SBA5678B (Demo)", "value": "SBA5678B"},
-                {"label": "Enter Manually", "value": "manual_entry"}
+                {"label": "Yes, Off-Peak", "value": "yes_offpeak"},
+                {"label": "No, Regular Car", "value": "no_offpeak"}
             ],
             "next_agent": "intake",
             "data_collected": {}
         }
     
-    # Registration entered, show fetched vehicle data
-    if state.get("registration_number") and not state.get("vehicle_confirmed"):
-        reg = state.get("registration_number", "SGX1234A")
-        # Get mock LTA data
-        lta_data = MOCK_LTA_DATA.get(reg.upper(), {
-            "make": "Toyota",
-            "model": "Camry", 
-            "engine_cc": "2000cc",
-            "year": 2022,
-            "road_tax_valid": True
-        })
-        return {
-            "message": f"🔍 I've retrieved your vehicle details from LTA!",
-            "quick_replies": [
-                {"label": "✓ Confirm Details", "value": "confirm_vehicle"},
-                {"label": "Edit Details", "value": "edit_vehicle"}
-            ],
-            "next_agent": "intake",
-            "data_collected": {
-                "vehicle_make": lta_data.get("make", "Toyota"),
-                "vehicle_model": lta_data.get("model", "Camry"),
-                "engine_capacity": lta_data.get("engine_cc", "2000cc"),
-                "vehicle_year": lta_data.get("year", 2022)
-            },
-            "show_cards": True,
-            "cards": [{
-                "type": "vehicle_fetch",
-                "registration": reg.upper(),
-                "data": {
-                    "registration": reg.upper(),
-                    "make": lta_data.get("make", "Toyota"),
-                    "model": lta_data.get("model", "Camry"),
-                    "engine_cc": lta_data.get("engine_cc", "2000cc"),
-                    "year": str(lta_data.get("year", 2022)),
-                    "road_tax": "Valid" if lta_data.get("road_tax_valid", True) else "Expired"
-                }
-            }]
-        }
+    # Step 6: Show vehicle summary and move to coverage
+    if state.get("engine_capacity") and not state.get("vehicle_confirmed"):
+        vtype = state.get("vehicle_type", "car")
+        # Skip off-peak for motorcycles
+        if vtype == "motorcycle" or state.get("off_peak") is not None:
+            make = state.get("vehicle_make", "")
+            model = state.get("vehicle_model", "")
+            engine = state.get("engine_capacity", "")
+            off_peak = "Yes" if state.get("off_peak") == "yes_offpeak" else "No"
+            
+            return {
+                "message": f"Perfect! Here's a summary of your vehicle details:",
+                "quick_replies": [
+                    {"label": "✓ Confirm & Continue", "value": "confirm_vehicle"},
+                    {"label": "Edit Details", "value": "edit_vehicle"}
+                ],
+                "next_agent": "intake",
+                "data_collected": {},
+                "show_cards": True,
+                "cards": [{
+                    "type": "vehicle_summary",
+                    "data": {
+                        "type": vtype.title(),
+                        "make": make,
+                        "model": model,
+                        "engine": engine,
+                        "off_peak": off_peak if vtype == "car" else "N/A"
+                    }
+                }]
+            }
     
     # Vehicle confirmed, show coverage options
     if state.get("vehicle_confirmed") and not state.get("coverage_type"):
