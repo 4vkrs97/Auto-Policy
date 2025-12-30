@@ -1261,19 +1261,10 @@ async def generate_html_document(session_id: str):
     state = session.get("state", {})
     policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
     
-    # Calculate Claim Intimation Date and Incident Date & Time
-    from datetime import timedelta
-    now = datetime.now()
-    claim_intimation_date = now.strftime("%d %B %Y, %I:%M %p")
-    incident_datetime = now - timedelta(hours=27, minutes=27)
-    incident_date_str = incident_datetime.strftime("%d %B %Y, %I:%M %p")
-    
     return {
         "policy_number": policy_number,
         "effective_date": datetime.now().strftime("%d %B %Y"),
         "expiry_date": (datetime.now().replace(year=datetime.now().year + 1)).strftime("%d %B %Y"),
-        "claim_intimation_date": claim_intimation_date,
-        "incident_date_time": incident_date_str,
         "policyholder": {
             "name": state.get("driver_name", "N/A"),
             "nric": state.get("driver_nric", "N/A"),
