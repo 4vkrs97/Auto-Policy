@@ -512,7 +512,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "type": "coverage_comparison",
                 "plans": [
                     {"name": "Comprehensive", "price": "From $1,200/year", "features": ["Own damage coverage", "Theft protection", "Third party liability", "Personal accident cover", "Natural disaster coverage"], "recommended": True},
-                    {"name": "Third Party", "price": "From $600/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]}
+                    {"name": "Third Party", "price": "From $800/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]}
                 ]
             }]
         }
