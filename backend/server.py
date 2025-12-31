@@ -671,9 +671,17 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     # Risk assessed, calculate and show premium
     if state.get("risk_assessed") and not state.get("final_premium"):
         # Calculate premium
-        base = 1200  # Base for car
-        if state.get("vehicle_type") == "motorcycle":
-            base = 600
+        # Third Party base rates (lower than Comprehensive)
+        coverage_type = state.get("coverage_type", "third_party")
+        
+        if coverage_type == "third_party":
+            base = 800  # Base for Third Party car
+            if state.get("vehicle_type") == "motorcycle":
+                base = 400
+        else:
+            base = 1200  # Base for Comprehensive car
+            if state.get("vehicle_type") == "motorcycle":
+                base = 600
         
         engine = state.get("engine_capacity", "2000cc")
         if "2001" in engine or "3000" in engine:
@@ -681,18 +689,36 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         elif "above" in engine.lower() or "3000" in engine:
             base *= 1.5
         
-        coverage_mult = 1.0 if state.get("coverage_type") == "third_party" else 1.4
         plan_mult = 1.2 if state.get("plan_name") == "Drive Premium" else 1.0
         
         ncd_percent = state.get("ncd_percent", 0)
         telematics_percent = 15 if state.get("telematics_consent") == "yes" else 0
         
-        gross = base * coverage_mult * plan_mult
+        gross = base * plan_mult
         ncd_discount = gross * (ncd_percent / 100)
         telematics_discount = gross * (telematics_percent / 100)
         final = gross - ncd_discount - telematics_discount
         
+        # Calculate plan loading amount
+        plan_loading = base * (plan_mult - 1) if plan_mult > 1 else 0
+        
         policy_num = f"INC-2024-{str(uuid.uuid4())[:8].upper()}"
+        
+        # Build breakdown based on coverage type
+        breakdown = [
+            {"item": f"Base Premium ({coverage_type.replace('_', ' ').title()})", "amount": f"${round(base, 2)}"},
+        ]
+        
+        if plan_mult > 1:
+            breakdown.append({"item": f"Plan Upgrade ({state.get('plan_name', 'Drive Premium')})", "amount": f"+${round(plan_loading, 2)}"})
+        
+        if ncd_discount > 0:
+            breakdown.append({"item": f"NCD Discount ({ncd_percent}%)", "amount": f"-${round(ncd_discount, 2)}"})
+        
+        if telematics_discount > 0:
+            breakdown.append({"item": f"Smart Driver Discount ({telematics_percent}%)", "amount": f"-${round(telematics_discount, 2)}"})
+        
+        breakdown.append({"item": "Final Premium", "amount": f"${round(final, 2)}"})
         
         return {
             "message": f"🎉 Great news! Based on your profile, here's your personalized quote:",
@@ -713,17 +739,10 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "cards": [{
                 "type": "quote_summary",
                 "plan_name": state.get("plan_name", "Drive Classic"),
-                "coverage_type": state.get("coverage_type", "third_party").replace("_", " ").title(),
+                "coverage_type": coverage_type.replace("_", " ").title(),
                 "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
                 "premium": f"${round(final, 2)}/year",
-                "breakdown": [
-                    {"item": "Base Premium", "amount": f"${round(base, 2)}"},
-                    {"item": f"Coverage ({state.get('coverage_type', 'comprehensive').replace('_', ' ').title()})", "amount": f"+${round(base * (coverage_mult - 1), 2)}" if coverage_mult > 1 else "$0"},
-                    {"item": f"Plan ({state.get('plan_name', 'Classic')})", "amount": f"+${round(base * coverage_mult * (plan_mult - 1), 2)}" if plan_mult > 1 else "$0"},
-                    {"item": f"NCD Discount ({ncd_percent}%)", "amount": f"-${round(ncd_discount, 2)}"},
-                    {"item": f"Smart Driver Discount ({telematics_percent}%)", "amount": f"-${round(telematics_discount, 2)}"},
-                    {"item": "Final Premium", "amount": f"${round(final, 2)}"}
-                ]
+                "breakdown": breakdown
             }]
         }
     
