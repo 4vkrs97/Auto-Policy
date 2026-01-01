@@ -673,6 +673,20 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         state["risk_assessed"] = True
         state["keep_quote"] = False
     
+    # Modify quote - let user choose what to modify (MUST come before premium calculation)
+    if state.get("modify_quote"):
+        return {
+            "message": "No problem! What would you like to modify in your quote?",
+            "quick_replies": [
+                {"label": "Change Coverage Type", "value": "change_coverage"},
+                {"label": "Change Plan", "value": "change_plan"},
+                {"label": "Change Telematics Option", "value": "change_telematics"},
+                {"label": "Keep Current Quote", "value": "keep_quote"}
+            ],
+            "next_agent": "pricing",
+            "data_collected": {"modify_quote": False}
+        }
+    
     # Risk assessed, calculate and show premium
     if state.get("risk_assessed") and not state.get("final_premium"):
         # Calculate premium
