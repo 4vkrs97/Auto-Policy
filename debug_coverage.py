@@ -7,7 +7,7 @@ from datetime import datetime
 
 def test_coverage_step():
     """Debug the coverage step specifically"""
-    base_url = "https://motor-policy-jiffy.preview.emergentagent.com"
+    base_url = "https://quick-insure-2.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Create session
