@@ -668,6 +668,11 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             }]
         }
     
+    # Handle "Keep Current Quote" - set risk_assessed to True to trigger premium recalculation
+    if state.get("keep_quote"):
+        state["risk_assessed"] = True
+        state["keep_quote"] = False
+    
     # Risk assessed, calculate and show premium
     if state.get("risk_assessed") and not state.get("final_premium"):
         # Calculate premium
