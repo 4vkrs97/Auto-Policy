@@ -817,11 +817,6 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             }
         }
     
-    if state.get("keep_quote"):
-        # Recalculate and show the quote again
-        state["risk_assessed"] = True
-        state["keep_quote"] = False
-    
     # Quote accepted, generate policy document
     if state.get("final_premium"):
         policy_num = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
