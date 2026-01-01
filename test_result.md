@@ -101,3 +101,69 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Fix the "Modify Quote" button in the Jiffy Jane Motor Insurance application.
+  The button should allow users to modify their quote (change coverage, plan, or telematics option)
+  instead of proceeding directly to policy issuance.
+
+backend:
+  - task: "Modify Quote functionality - allows users to change coverage, plan, or telematics"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Fixed the Modify Quote flow by:
+          1. Added handlers in update_state_from_input for change_coverage, change_plan, change_telematics, keep_quote
+          2. Moved keep_quote handling before the premium calculation block
+          3. Removed duplicate keep_quote check later in the flow
+
+frontend:
+  - task: "No frontend changes required - frontend already renders quick reply buttons correctly"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ChatPage.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Frontend correctly renders Modify Quote button from backend quick_replies"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Modify Quote functionality - allows users to change coverage, plan, or telematics"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Fixed the Modify Quote functionality. The issue was that when users clicked "Modify Quote":
+      1. The state was updated with modify_quote=True and premium fields cleared
+      2. But the handlers for modification choices (change_coverage, change_plan, etc.) weren't set
+      3. The keep_quote handling was in the wrong location (after premium calculation check)
+      
+      Please test the full modify quote flow:
+      1. Complete a quote to see the quote summary with "Accept & Generate Policy" and "Modify Quote" buttons
+      2. Click "Modify Quote" - should show options: Change Coverage Type, Change Plan, Change Telematics Option, Keep Current Quote
+      3. Test each modification option:
+         a. Change Coverage Type -> should show Comprehensive/Third Party options
+         b. Change Plan -> should show Drive Premium/Drive Classic options
+         c. Change Telematics Option -> should show Yes/No for Smart Driver programme
+         d. Keep Current Quote -> should recalculate and show the same quote again
+      4. After making a change, verify the quote recalculates correctly
