@@ -746,6 +746,77 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             }]
         }
     
+    # Modify quote - let user choose what to modify
+    if state.get("modify_quote"):
+        # Clear the modify flag
+        return {
+            "message": "No problem! What would you like to modify in your quote?",
+            "quick_replies": [
+                {"label": "Change Coverage Type", "value": "change_coverage"},
+                {"label": "Change Plan", "value": "change_plan"},
+                {"label": "Change Telematics Option", "value": "change_telematics"},
+                {"label": "Keep Current Quote", "value": "keep_quote"}
+            ],
+            "next_agent": "pricing",
+            "data_collected": {"modify_quote": False}
+        }
+    
+    # Handle modification choices
+    if state.get("change_coverage"):
+        return {
+            "message": "Please select your preferred coverage type:",
+            "quick_replies": [
+                {"label": "Comprehensive", "value": "comprehensive"},
+                {"label": "Third Party Only", "value": "third_party"}
+            ],
+            "next_agent": "coverage",
+            "data_collected": {
+                "change_coverage": False,
+                "coverage_type": None,
+                "plan_name": None,
+                "risk_assessed": None,
+                "final_premium": None
+            }
+        }
+    
+    if state.get("change_plan"):
+        coverage = state.get("coverage_type", "comprehensive").replace("_", " ").title()
+        return {
+            "message": f"Please select your preferred plan for {coverage} coverage:",
+            "quick_replies": [
+                {"label": "Drive Premium", "value": "Drive Premium"},
+                {"label": "Drive Classic", "value": "Drive Classic"}
+            ],
+            "next_agent": "coverage",
+            "data_collected": {
+                "change_plan": False,
+                "plan_name": None,
+                "risk_assessed": None,
+                "final_premium": None
+            }
+        }
+    
+    if state.get("change_telematics"):
+        return {
+            "message": "Would you like to opt-in for our Smart Driver programme? Save up to 15% on your premium!",
+            "quick_replies": [
+                {"label": "Yes, Save 15%!", "value": "yes"},
+                {"label": "No Thanks", "value": "no"}
+            ],
+            "next_agent": "telematics",
+            "data_collected": {
+                "change_telematics": False,
+                "telematics_consent": None,
+                "risk_assessed": None,
+                "final_premium": None
+            }
+        }
+    
+    if state.get("keep_quote"):
+        # Recalculate and show the quote again
+        state["risk_assessed"] = True
+        state["keep_quote"] = False
+    
     # Quote accepted, generate policy document
     if state.get("final_premium"):
         policy_num = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
