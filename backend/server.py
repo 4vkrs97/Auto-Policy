@@ -1105,6 +1105,23 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         state["risk_assessed"] = None
         state["modify_quote"] = True
     
+    # Handle modification choices from the modify quote menu
+    if input_lower in ["change_coverage", "change coverage type"]:
+        state["change_coverage"] = True
+        state["modify_quote"] = False  # Clear modify flag
+    
+    if input_lower in ["change_plan", "change plan"]:
+        state["change_plan"] = True
+        state["modify_quote"] = False  # Clear modify flag
+    
+    if input_lower in ["change_telematics", "change telematics option"]:
+        state["change_telematics"] = True
+        state["modify_quote"] = False  # Clear modify flag
+    
+    if input_lower in ["keep_quote", "keep current quote"]:
+        state["keep_quote"] = True
+        state["modify_quote"] = False  # Clear modify flag
+    
     return state
 
 @api_router.get("/messages/{session_id}", response_model=List[Message])
