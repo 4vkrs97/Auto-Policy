@@ -634,7 +634,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         }
     
     # Telematics recorded, calculate and show risk assessment then premium
-    if state.get("telematics_consent") and not state.get("risk_assessed") and not state.get("modify_quote"):
+    if state.get("telematics_consent") and not state.get("risk_assessed") and not state.get("modify_quote") and not state.get("change_coverage") and not state.get("change_plan") and not state.get("change_telematics"):
         # Determine NCD percentage
         ncd_percent = 0
         if state.get("claims_history") == "no_claims":
