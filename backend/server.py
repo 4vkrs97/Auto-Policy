@@ -1024,6 +1024,16 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     if input_lower in ["accept_quote", "✓ accept & generate policy", "accept & generate policy"]:
         state["quote_accepted"] = True
     
+    # Modify quote - reset pricing state to allow modification
+    if input_lower in ["modify", "modify quote", "modify_quote"]:
+        state["final_premium"] = None
+        state["base_premium"] = None
+        state["gross_premium"] = None
+        state["ncd_discount"] = None
+        state["telematics_discount"] = None
+        state["risk_assessed"] = None
+        state["modify_quote"] = True
+    
     return state
 
 @api_router.get("/messages/{session_id}", response_model=List[Message])
