@@ -209,6 +209,92 @@
     color: #F96302;
 }
 
+/* Brand Buttons Grid (for car/motorcycle brand selection) */
+.brand-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+    .brand-buttons-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.brand-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: white;
+    border: 2px solid #E5E7EB;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 100px;
+}
+
+.brand-button:hover {
+    border-color: #F96302;
+    background: #FFF7ED;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249, 99, 2, 0.15);
+}
+
+.brand-button:active {
+    transform: scale(0.98);
+}
+
+.brand-logo-container {
+    width: 60px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-logo {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: grayscale(20%);
+    transition: filter 0.2s ease;
+}
+
+.brand-button:hover .brand-logo {
+    filter: grayscale(0%);
+}
+
+.brand-logo-fallback {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #F96302, #FF8534);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+}
+
+.brand-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    font-family: 'Outfit', sans-serif;
+    text-align: center;
+}
+
+.brand-button:hover .brand-name {
+    color: #F96302;
+}
+
 /* Input Area */
 .chat-input-container {
     padding: 16px 24px;
