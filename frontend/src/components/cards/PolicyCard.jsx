@@ -1,4 +1,18 @@
-import { FileText, Download, Calendar, User, Car, Shield } from "lucide-react";
+import { FileText, Download, Calendar, User, Car, Shield, AlertTriangle } from "lucide-react";
+
+// Standard motor insurance exclusions for Singapore
+const POLICY_EXCLUSIONS = [
+  "Driving under the influence of alcohol or drugs",
+  "Driving without a valid license",
+  "Use of vehicle for illegal purposes",
+  "Mechanical or electrical breakdown, wear and tear",
+  "Damage caused by war, terrorism, or nuclear risks",
+  "Consequential or indirect losses",
+  "Personal belongings left in the vehicle",
+  "Racing, speed testing, or rallies",
+  "Using vehicle for hire/reward (unless declared)",
+  "Damage while vehicle is used outside Singapore/West Malaysia"
+];
 
 export const PolicyCard = ({ card, onDownload }) => {
   return (
@@ -69,6 +83,25 @@ export const PolicyCard = ({ card, onDownload }) => {
           <span className="policy-premium-amount">
             {card.premium}
           </span>
+        </div>
+
+        {/* Exclusions Section */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <h4 className="font-semibold text-gray-900 text-sm font-['Outfit']">Policy Exclusions</h4>
+          </div>
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+            <p className="text-xs text-amber-800 mb-2 font-medium">This policy does not cover:</p>
+            <ul className="space-y-1">
+              {POLICY_EXCLUSIONS.map((exclusion, index) => (
+                <li key={index} className="text-xs text-amber-700 flex items-start gap-2">
+                  <span className="text-amber-400 mt-0.5">•</span>
+                  <span>{exclusion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Download Button */}
