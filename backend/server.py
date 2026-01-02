@@ -1442,6 +1442,77 @@ async def generate_html_document(session_id: str):
         }
     }
 
+class PaymentRequest(BaseModel):
+    session_id: str
+    payment_method: str
+    amount: float
+
+class PaymentResponse(BaseModel):
+    success: bool
+    payment_reference: str
+    message: str
+
+@api_router.post("/payment/process")
+async def process_payment(payment: PaymentRequest):
+    """Process demo payment for motor insurance"""
+    session = await db.sessions.find_one({"id": payment.session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Generate payment reference
+    payment_ref = f"PAY-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    # Generate policy number in format TRV-YYYY-XXXXX
+    current_year = datetime.now().year
+    sequence_num = str(uuid.uuid4().int)[:5]
+    policy_num = f"TRV-{current_year}-{sequence_num}"
+    
+    # Update session with payment info and policy number
+    await db.sessions.update_one(
+        {"id": payment.session_id},
+        {"$set": {
+            "state.payment_completed": True,
+            "state.payment_method": payment.payment_method,
+            "state.payment_reference": payment_ref,
+            "state.policy_number": policy_num,
+            "state.documents_ready": True
+        }}
+    )
+    
+    # Save payment record
+    payment_record = {
+        "id": str(uuid.uuid4()),
+        "session_id": payment.session_id,
+        "payment_reference": payment_ref,
+        "policy_number": policy_num,
+        "payment_method": payment.payment_method,
+        "amount": payment.amount,
+        "currency": "SGD",
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.payments.insert_one(payment_record)
+    
+    return {
+        "success": True,
+        "payment_reference": payment_ref,
+        "policy_number": policy_num,
+        "message": "Payment processed successfully"
+    }
+
+@api_router.get("/payment/methods")
+async def get_payment_methods():
+    """Get available payment methods for Singapore"""
+    return {
+        "methods": [
+            {"id": "paynow", "name": "PayNow", "description": "Pay instantly with PayNow QR"},
+            {"id": "card", "name": "Credit/Debit Card", "description": "Visa, Mastercard, AMEX"},
+            {"id": "grabpay", "name": "GrabPay", "description": "Pay with your GrabPay wallet"},
+            {"id": "paylah", "name": "DBS PayLah!", "description": "Pay with DBS PayLah!"},
+            {"id": "nets", "name": "NETS", "description": "Pay with NETS"}
+        ]
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
