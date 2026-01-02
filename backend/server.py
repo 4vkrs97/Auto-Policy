@@ -505,13 +505,67 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Step 5: Ask about off-peak (for cars only)
-    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("off_peak") is None:
+    # Step 5a: Ask about primary purpose of vehicle (for cars only)
+    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("vehicle_purpose") is None:
         return {
-            "message": "Is your car registered as an off-peak vehicle? (Weekend/Red plate car)",
+            "message": "📋 Great! Now I need to understand how you use your vehicle for accurate pricing.\n\n**What is the primary purpose of your vehicle?**",
             "quick_replies": [
-                {"label": "Yes, Off-Peak", "value": "yes_offpeak"},
-                {"label": "No, Regular Car", "value": "no_offpeak"}
+                {"label": "🏠 Personal Use", "value": "personal_use"},
+                {"label": "💼 Business Use", "value": "business_use"},
+                {"label": "📦 Delivery / Logistics", "value": "delivery_logistics"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 5b: Ask about frequency of use
+    if state.get("vehicle_purpose") and state.get("usage_frequency") is None:
+        return {
+            "message": "**How often do you use your vehicle?**",
+            "quick_replies": [
+                {"label": "📅 Daily", "value": "daily"},
+                {"label": "🗓️ Weekends Only", "value": "weekends_only"},
+                {"label": "🔄 Occasionally", "value": "occasionally"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 5c: Ask about monthly distance
+    if state.get("usage_frequency") and state.get("monthly_distance") is None:
+        return {
+            "message": "**How many kilometres do you drive per month?**",
+            "quick_replies": [
+                {"label": "< 500 km", "value": "less_500km"},
+                {"label": "500 – 1,000 km", "value": "500_1000km"},
+                {"label": "1,001 – 2,000 km", "value": "1001_2000km"},
+                {"label": "> 2,000 km", "value": "more_2000km"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 5d: Ask about usual driving time
+    if state.get("monthly_distance") and state.get("driving_time") is None:
+        return {
+            "message": "**When do you usually drive?**",
+            "quick_replies": [
+                {"label": "🚗 Peak Hours (7-10AM / 5-8PM)", "value": "peak_hours"},
+                {"label": "🌙 Off-Peak Hours", "value": "off_peak_hours"},
+                {"label": "🔀 Mixed / Both", "value": "mixed_hours"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 5e: Ask about typical driving environment
+    if state.get("driving_time") and state.get("driving_environment") is None:
+        return {
+            "message": "**Where do you mainly drive your vehicle?**",
+            "quick_replies": [
+                {"label": "🏙️ Urban / City Roads", "value": "urban_city"},
+                {"label": "🏘️ Suburban / Light Traffic", "value": "suburban"},
+                {"label": "🛣️ Rural / Highways", "value": "rural_highways"}
             ],
             "next_agent": "intake",
             "data_collected": {}
@@ -520,12 +574,28 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     # Step 6: Show vehicle summary and move to coverage
     if state.get("engine_capacity") and not state.get("vehicle_confirmed"):
         vtype = state.get("vehicle_type", "car")
-        # Skip off-peak for motorcycles
-        if vtype == "motorcycle" or state.get("off_peak") is not None:
+        # For cars, need all usage questions answered; for motorcycles, skip usage questions
+        if vtype == "motorcycle" or state.get("driving_environment") is not None:
             make = state.get("vehicle_make", "")
             model = state.get("vehicle_model", "")
             engine = state.get("engine_capacity", "")
-            off_peak = "Yes" if state.get("off_peak") == "yes_offpeak" else "No"
+            
+            # Format usage details for cars
+            usage_details = {}
+            if vtype == "car":
+                purpose_map = {"personal_use": "Personal", "business_use": "Business", "delivery_logistics": "Delivery/Logistics"}
+                freq_map = {"daily": "Daily", "weekends_only": "Weekends Only", "occasionally": "Occasionally"}
+                distance_map = {"less_500km": "< 500 km", "500_1000km": "500-1,000 km", "1001_2000km": "1,001-2,000 km", "more_2000km": "> 2,000 km"}
+                time_map = {"peak_hours": "Peak Hours", "off_peak_hours": "Off-Peak Hours", "mixed_hours": "Mixed"}
+                env_map = {"urban_city": "Urban/City", "suburban": "Suburban", "rural_highways": "Rural/Highways"}
+                
+                usage_details = {
+                    "purpose": purpose_map.get(state.get("vehicle_purpose"), "N/A"),
+                    "frequency": freq_map.get(state.get("usage_frequency"), "N/A"),
+                    "distance": distance_map.get(state.get("monthly_distance"), "N/A"),
+                    "driving_time": time_map.get(state.get("driving_time"), "N/A"),
+                    "environment": env_map.get(state.get("driving_environment"), "N/A")
+                }
             
             return {
                 "message": f"Perfect! Here's a summary of your vehicle details:",
@@ -543,7 +613,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                         "make": make,
                         "model": model,
                         "engine": engine,
-                        "off_peak": off_peak if vtype == "car" else "N/A"
+                        "usage": usage_details if vtype == "car" else None
                     }
                 }]
             }
