@@ -421,16 +421,66 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Step 2: Ask for vehicle make
-    if state.get("vehicle_type") and not state.get("vehicle_make"):
-        vtype = state.get("vehicle_type")
-        makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
+    # Step 1.5: For cars, ask if user has VIN number
+    if state.get("vehicle_type") == "car" and state.get("has_vin") is None:
         return {
-            "message": f"Great choice! Which brand is your {vtype}?",
-            "quick_replies": [{"label": make, "value": make} for make in makes[:8]],
+            "message": "Do you have your Vehicle Identification Number (VIN)? I can automatically fetch your vehicle details if you provide the VIN.",
+            "quick_replies": [
+                {"label": "Yes, I have VIN", "value": "has_vin_yes"},
+                {"label": "No, Enter Manually", "value": "has_vin_no"}
+            ],
             "next_agent": "intake",
             "data_collected": {}
         }
+    
+    # Step 1.6: If user has VIN, ask them to enter it
+    if state.get("has_vin") == "yes" and not state.get("vin_number") and not state.get("vin_lookup_done"):
+        return {
+            "message": "Please enter your 17-character VIN number. You can find it on your vehicle registration card or on the dashboard near the windshield.",
+            "quick_replies": [],
+            "next_agent": "intake",
+            "data_collected": {},
+            "awaiting_vin_input": True
+        }
+    
+    # Step 1.7: VIN entered, show fetched vehicle details
+    if state.get("vin_lookup_done") and not state.get("vin_confirmed"):
+        vin_data = state.get("vin_data", {})
+        return {
+            "message": f"🔍 I found your vehicle details from the VIN lookup!",
+            "quick_replies": [
+                {"label": "✓ Confirm Vehicle", "value": "confirm_vin_vehicle"},
+                {"label": "Enter Manually Instead", "value": "enter_manually"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "vin_fetch",
+                "data": {
+                    "vin": state.get("vin_number", ""),
+                    "make": vin_data.get("make", "Unknown"),
+                    "model": vin_data.get("model", "Unknown"),
+                    "year": vin_data.get("year", "Unknown"),
+                    "engine": vin_data.get("engine_capacity", "Unknown"),
+                    "fuel_type": vin_data.get("fuel_type", "Unknown"),
+                    "body_class": vin_data.get("body_class", "Unknown")
+                }
+            }]
+        }
+    
+    # Step 2: Ask for vehicle make (skip if VIN confirmed)
+    if state.get("vehicle_type") and not state.get("vehicle_make"):
+        # Check if we need to skip VIN flow for motorcycles or if user chose manual entry
+        if state.get("vehicle_type") == "motorcycle" or state.get("has_vin") == "no" or state.get("vin_confirmed"):
+            vtype = state.get("vehicle_type")
+            makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
+            return {
+                "message": f"Great choice! Which brand is your {vtype}?",
+                "quick_replies": [{"label": make, "value": make} for make in makes[:8]],
+                "next_agent": "intake",
+                "data_collected": {}
+            }
     
     # Step 3: Ask for vehicle model
     if state.get("vehicle_make") and not state.get("vehicle_model"):
