@@ -901,6 +901,10 @@ async def create_session(input: SessionCreate):
             "ncd_discount": None,
             "telematics_discount": None,
             "policy_number": None,
+            "payment_initiated": None,
+            "payment_completed": None,
+            "payment_method": None,
+            "payment_reference": None,
             "documents_ready": None
         }
     )
