@@ -502,11 +502,24 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         if state.get("vehicle_type") == "motorcycle" or state.get("has_vin") == "no" or state.get("vin_confirmed"):
             vtype = state.get("vehicle_type")
             makes = VEHICLE_MAKES.get(vtype, VEHICLE_MAKES["car"])
+            
+            # Get appropriate logo mapping
+            logo_map = CAR_BRAND_LOGOS if vtype == "car" else MOTORCYCLE_BRAND_LOGOS
+            
+            # Create quick replies with logos
+            quick_replies = []
+            for make in makes[:8]:
+                reply = {"label": make, "value": make}
+                if make in logo_map:
+                    reply["logo"] = logo_map[make]
+                quick_replies.append(reply)
+            
             return {
                 "message": f"Great choice! Which brand is your {vtype}?",
-                "quick_replies": [{"label": make, "value": make} for make in makes[:8]],
+                "quick_replies": quick_replies,
                 "next_agent": "intake",
-                "data_collected": {}
+                "data_collected": {},
+                "show_brand_logos": True
             }
     
     # Step 3: Ask for vehicle model
