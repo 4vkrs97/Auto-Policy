@@ -1274,13 +1274,68 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
                     state["engine_capacity"] = cap
                     return state
     
-    # Off-peak for cars
-    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("off_peak") is None:
-        if "yes" in input_lower or "off-peak" in input_lower or "offpeak" in input_lower:
-            state["off_peak"] = "yes_offpeak"
+    # Vehicle usage questions (for cars only)
+    # Primary purpose
+    if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("vehicle_purpose") is None:
+        if input_lower in ["personal_use", "🏠 personal use", "personal"]:
+            state["vehicle_purpose"] = "personal_use"
             return state
-        elif "no" in input_lower or "regular" in input_lower:
-            state["off_peak"] = "no_offpeak"
+        elif input_lower in ["business_use", "💼 business use", "business"]:
+            state["vehicle_purpose"] = "business_use"
+            return state
+        elif input_lower in ["delivery_logistics", "📦 delivery / logistics", "delivery", "logistics"]:
+            state["vehicle_purpose"] = "delivery_logistics"
+            return state
+    
+    # Usage frequency
+    if state.get("vehicle_purpose") and state.get("usage_frequency") is None:
+        if input_lower in ["daily", "📅 daily"]:
+            state["usage_frequency"] = "daily"
+            return state
+        elif input_lower in ["weekends_only", "🗓️ weekends only", "weekends only", "weekends"]:
+            state["usage_frequency"] = "weekends_only"
+            return state
+        elif input_lower in ["occasionally", "🔄 occasionally"]:
+            state["usage_frequency"] = "occasionally"
+            return state
+    
+    # Monthly distance
+    if state.get("usage_frequency") and state.get("monthly_distance") is None:
+        if input_lower in ["less_500km", "< 500 km", "less than 500"]:
+            state["monthly_distance"] = "less_500km"
+            return state
+        elif input_lower in ["500_1000km", "500 – 1,000 km", "500-1000", "500 - 1,000 km"]:
+            state["monthly_distance"] = "500_1000km"
+            return state
+        elif input_lower in ["1001_2000km", "1,001 – 2,000 km", "1001-2000", "1,001 - 2,000 km"]:
+            state["monthly_distance"] = "1001_2000km"
+            return state
+        elif input_lower in ["more_2000km", "> 2,000 km", "more than 2000"]:
+            state["monthly_distance"] = "more_2000km"
+            return state
+    
+    # Driving time
+    if state.get("monthly_distance") and state.get("driving_time") is None:
+        if input_lower in ["peak_hours", "🚗 peak hours (7-10am / 5-8pm)", "peak hours", "peak"]:
+            state["driving_time"] = "peak_hours"
+            return state
+        elif input_lower in ["off_peak_hours", "🌙 off-peak hours", "off-peak hours", "off-peak", "off peak"]:
+            state["driving_time"] = "off_peak_hours"
+            return state
+        elif input_lower in ["mixed_hours", "🔀 mixed / both", "mixed / both", "mixed", "both"]:
+            state["driving_time"] = "mixed_hours"
+            return state
+    
+    # Driving environment
+    if state.get("driving_time") and state.get("driving_environment") is None:
+        if input_lower in ["urban_city", "🏙️ urban / city roads", "urban / city roads", "urban", "city"]:
+            state["driving_environment"] = "urban_city"
+            return state
+        elif input_lower in ["suburban", "🏘️ suburban / light traffic", "suburban / light traffic"]:
+            state["driving_environment"] = "suburban"
+            return state
+        elif input_lower in ["rural_highways", "🛣️ rural / highways", "rural / highways", "rural", "highways"]:
+            state["driving_environment"] = "rural_highways"
             return state
     
     # Confirm vehicle
