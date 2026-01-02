@@ -202,7 +202,7 @@ const PaymentGateway = ({ sessionId, amount, onClose, onPaymentComplete }) => {
                 </button>
                 <button
                   onClick={handleConfirmPayment}
-                  className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+                  className="flex-1 py-2.5 rounded-lg bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 transition-colors"
                 >
                   Confirm Payment
                 </button>
@@ -211,27 +211,27 @@ const PaymentGateway = ({ sessionId, amount, onClose, onPaymentComplete }) => {
           )}
 
           {step === "processing" && (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+            <div className="text-center py-8">
+              <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <Loader2 className="w-7 h-7 text-orange-500 animate-spin" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Processing Payment</h3>
-              <p className="text-gray-500">Please wait while we process your payment...</p>
-              <div className="flex justify-center gap-1 mt-6">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Processing Payment</h3>
+              <p className="text-gray-500 text-sm">Please wait while we process your payment...</p>
+              <div className="flex justify-center gap-1 mt-4">
+                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
               </div>
             </div>
           )}
 
           {step === "success" && (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-once">
-                <Check className="w-10 h-10 text-green-500" />
+            <div className="text-center py-8">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-once">
+                <Check className="w-7 h-7 text-green-500" />
               </div>
-              <h3 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h3>
-              <p className="text-gray-500">Your policy is being generated...</p>
+              <h3 className="text-xl font-bold text-green-600 mb-1">Payment Successful!</h3>
+              <p className="text-gray-500 text-sm">Your policy is being generated...</p>
             </div>
           )}
         </div>
