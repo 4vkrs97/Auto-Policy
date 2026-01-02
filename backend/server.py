@@ -1108,14 +1108,17 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     
     if state.get("change_telematics"):
         return {
-            "message": "Would you like to opt-in for our Smart Driver programme? Save up to 15% on your premium!",
+            "message": "📱 **Smart Driver Programme**\n\nLet's update your telematics preferences.\n\n**Are you willing to share your driving behaviour data via a mobile app or in-vehicle device?**",
             "quick_replies": [
-                {"label": "Yes, Save 15%!", "value": "yes"},
-                {"label": "No Thanks", "value": "no"}
+                {"label": "✓ Yes, I am willing", "value": "data_sharing_yes"},
+                {"label": "✗ No, I am not willing", "value": "data_sharing_no"}
             ],
             "next_agent": "telematics",
             "data_collected": {
                 "change_telematics": False,
+                "telematics_data_sharing": None,
+                "telematics_gps_consent": None,
+                "telematics_safety_alerts": None,
                 "telematics_consent": None,
                 "risk_assessed": None,
                 "final_premium": None
