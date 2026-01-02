@@ -1373,6 +1373,26 @@ async def send_message(input: MessageCreate):
         "current_agent": next_agent
     }
 
+@api_router.patch("/sessions/{session_id}/state")
+async def update_session_state(session_id: str, state_update: Dict[str, Any]):
+    """Update specific fields in session state (for add-ons toggling)"""
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Update state with provided fields
+    update_fields = {f"state.{k}": v for k, v in state_update.items()}
+    
+    await db.sessions.update_one(
+        {"id": session_id},
+        {"$set": update_fields}
+    )
+    
+    # Get updated session
+    updated_session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+    
+    return {"success": True, "state": updated_session.get("state", {})}
+
 def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     """Update session state based on user input"""
     input_lower = user_input.lower()
