@@ -216,12 +216,14 @@ export const ChatPage = () => {
     
     // Update current agent to document
     setCurrentAgent("document");
-    if (!completedAgents.includes("payment")) {
-      setCompletedAgents(prev => [...prev, "payment"]);
-    }
-    if (!completedAgents.includes("document")) {
-      setCompletedAgents(prev => [...prev, "document"]);
-    }
+    const validAgentKeys = AGENTS.map(a => a.key);
+    setCompletedAgents(prev => {
+      const newAgents = [...prev];
+      if (!newAgents.includes("payment")) newAgents.push("payment");
+      if (!newAgents.includes("document")) newAgents.push("document");
+      // Filter to only include valid agents and cap at AGENTS.length
+      return [...new Set(newAgents.filter(a => validAgentKeys.includes(a)))].slice(0, AGENTS.length);
+    });
     
     // Send a message to update the chat
     sendMessage("Payment completed", "payment_completed");
