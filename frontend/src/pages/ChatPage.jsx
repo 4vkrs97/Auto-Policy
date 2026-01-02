@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Send, ArrowLeft, Download, FileText, Check, X, LogOut, RefreshCw, Car, Shield, User, Briefcase, Calendar, Clock, AlertTriangle, Bot, Calculator, Cpu, CheckCircle } from "lucide-react";
+import { Send, ArrowLeft, Download, FileText, Check, X, LogOut, RefreshCw, Car, Shield, User, Briefcase, Calendar, Clock, AlertTriangle, Bot, Calculator, Cpu, CheckCircle, CreditCard, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import ChatBubble from "@/components/chat/ChatBubble";
 import TypingIndicator from "@/components/chat/TypingIndicator";
@@ -9,6 +9,8 @@ import QuoteCard from "@/components/cards/QuoteCard";
 import PolicyCard from "@/components/cards/PolicyCard";
 import DataFetchCard from "@/components/cards/DataFetchCard";
 import VehicleSummaryCard from "@/components/cards/VehicleSummaryCard";
+import PaymentGateway from "@/components/cards/PaymentGateway";
+import PolicyPopup from "@/components/cards/PolicyPopup";
 
 const INCOME_LOGO = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/d6i0a1n5_image.png";
 const JIFFY_JANE = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/1czfonbv_image.png";
@@ -25,6 +27,7 @@ const AGENTS = [
   { key: "telematics", name: "Telematics Agent", icon: Cpu, color: "bg-cyan-500" },
   { key: "risk_assessment", name: "Risk Agent", icon: Shield, color: "bg-amber-500" },
   { key: "pricing", name: "Pricing Agent", icon: Calculator, color: "bg-emerald-500" },
+  { key: "payment", name: "Payment Agent", icon: CreditCard, color: "bg-violet-500" },
   { key: "document", name: "Document Agent", icon: FileText, color: "bg-rose-500" },
 ];
 
@@ -39,6 +42,9 @@ export const ChatPage = () => {
   const [policyNumber, setPolicyNumber] = useState(null);
   const [currentAgent, setCurrentAgent] = useState("orchestrator");
   const [completedAgents, setCompletedAgents] = useState([]);
+  const [showPaymentGateway, setShowPaymentGateway] = useState(false);
+  const [showPolicyPopup, setShowPolicyPopup] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
