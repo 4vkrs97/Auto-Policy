@@ -116,6 +116,32 @@ VEHICLE_MODELS = {
     "KTM": ["Duke 390", "RC 390", "Adventure 390"]
 }
 
+# Car brand logos (using reliable CDN sources)
+CAR_BRAND_LOGOS = {
+    "Toyota": "https://www.carlogos.org/car-logos/toyota-logo-2019-3700x1200.png",
+    "Honda": "https://www.carlogos.org/car-logos/honda-logo-1700x1150.png",
+    "BMW": "https://www.carlogos.org/car-logos/bmw-logo-2020-blue-white.png",
+    "Mercedes-Benz": "https://www.carlogos.org/car-logos/mercedes-benz-logo-2011-1920x1080.png",
+    "Audi": "https://www.carlogos.org/car-logos/audi-logo-2016.png",
+    "Mazda": "https://www.carlogos.org/car-logos/mazda-logo-2018.png",
+    "Hyundai": "https://www.carlogos.org/car-logos/hyundai-logo-2011-1920x1080.png",
+    "Kia": "https://www.carlogos.org/car-logos/kia-logo-2021-black.png",
+    "Nissan": "https://www.carlogos.org/car-logos/nissan-logo-2020-black.png",
+    "Volkswagen": "https://www.carlogos.org/car-logos/volkswagen-logo-2019-1500x1500.png"
+}
+
+# Motorcycle brand logos
+MOTORCYCLE_BRAND_LOGOS = {
+    "Yamaha": "https://www.carlogos.org/motorcycle-logos/yamaha-logo.png",
+    "Kawasaki": "https://www.carlogos.org/motorcycle-logos/kawasaki-logo.png",
+    "Suzuki": "https://www.carlogos.org/car-logos/suzuki-logo-1920x1080.png",
+    "Ducati": "https://www.carlogos.org/motorcycle-logos/ducati-logo.png",
+    "Harley-Davidson": "https://www.carlogos.org/motorcycle-logos/harley-davidson-logo.png",
+    "KTM": "https://www.carlogos.org/motorcycle-logos/ktm-logo.png",
+    "Honda": "https://www.carlogos.org/car-logos/honda-logo-1700x1150.png",
+    "BMW": "https://www.carlogos.org/car-logos/bmw-logo-2020-blue-white.png"
+}
+
 ENGINE_CAPACITIES = {
     "car": ["1000cc - 1600cc", "1601cc - 2000cc", "2001cc - 3000cc", "Above 3000cc"],
     "motorcycle": ["Below 200cc", "200cc - 400cc", "401cc - 650cc", "Above 650cc"]
