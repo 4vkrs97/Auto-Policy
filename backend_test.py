@@ -434,6 +434,10 @@ class MotorInsuranceAPITester:
         self.log("\n📄 Testing Document Generation...")
         self.test_document_generation()
         
+        # Payment processing tests
+        self.log("\n💳 Testing Payment Processing...")
+        self.test_payment_endpoints()
+        
         # Print results
         self.print_results()
         
