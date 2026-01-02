@@ -119,28 +119,28 @@ VEHICLE_MODELS = {
 
 # Car brand logos (using reliable CDN sources)
 CAR_BRAND_LOGOS = {
-    "Toyota": "https://www.carlogos.org/car-logos/toyota-logo-2019-3700x1200.png",
-    "Honda": "https://www.carlogos.org/car-logos/honda-logo-1700x1150.png",
-    "BMW": "https://www.carlogos.org/car-logos/bmw-logo-2020-blue-white.png",
-    "Mercedes-Benz": "https://www.carlogos.org/car-logos/mercedes-benz-logo-2011-1920x1080.png",
-    "Audi": "https://www.carlogos.org/car-logos/audi-logo-2016.png",
-    "Mazda": "https://www.carlogos.org/car-logos/mazda-logo-2018.png",
-    "Hyundai": "https://www.carlogos.org/car-logos/hyundai-logo-2011-1920x1080.png",
-    "Kia": "https://www.carlogos.org/car-logos/kia-logo-2021-black.png",
-    "Nissan": "https://www.carlogos.org/car-logos/nissan-logo-2020-black.png",
-    "Volkswagen": "https://www.carlogos.org/car-logos/volkswagen-logo-2019-1500x1500.png"
+    "Toyota": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carance_logo.svg/200px-Toyota_carrance_logo.svg.png",
+    "Honda": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/200px-Honda.svg.png",
+    "BMW": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/200px-BMW.svg.png",
+    "Mercedes-Benz": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/200px-Mercedes-Logo.svg.png",
+    "Audi": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Audi-Logo_2016.svg/200px-Audi-Logo_2016.svg.png",
+    "Mazda": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Mazda_logo_with_tagline.svg/200px-Mazda_logo_with_tagline.svg.png",
+    "Hyundai": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/200px-Hyundai_Motor_Company_logo.svg.png",
+    "Kia": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Kia-logo.svg/200px-Kia-logo.svg.png",
+    "Nissan": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Nissan_logo.svg/200px-Nissan_logo.svg.png",
+    "Volkswagen": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/200px-Volkswagen_logo_2019.svg.png"
 }
 
 # Motorcycle brand logos
 MOTORCYCLE_BRAND_LOGOS = {
-    "Yamaha": "https://www.carlogos.org/motorcycle-logos/yamaha-logo.png",
-    "Kawasaki": "https://www.carlogos.org/motorcycle-logos/kawasaki-logo.png",
-    "Suzuki": "https://www.carlogos.org/car-logos/suzuki-logo-1920x1080.png",
-    "Ducati": "https://www.carlogos.org/motorcycle-logos/ducati-logo.png",
-    "Harley-Davidson": "https://www.carlogos.org/motorcycle-logos/harley-davidson-logo.png",
-    "KTM": "https://www.carlogos.org/motorcycle-logos/ktm-logo.png",
-    "Honda": "https://www.carlogos.org/car-logos/honda-logo-1700x1150.png",
-    "BMW": "https://www.carlogos.org/car-logos/bmw-logo-2020-blue-white.png"
+    "Yamaha": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Yamaha_Motor_logo.svg/200px-Yamaha_Motor_logo.svg.png",
+    "Kawasaki": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Kawasaki_motorcycles_logo.svg/200px-Kawasaki_motorcycles_logo.svg.png",
+    "Suzuki": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2.svg/200px-Suzuki_logo_2.svg.png",
+    "Ducati": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ducati_logo.svg/200px-Ducati_logo.svg.png",
+    "Harley-Davidson": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Harley-Davidson_logo.svg/200px-Harley-Davidson_logo.svg.png",
+    "KTM": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/KTM-Logo.svg/200px-KTM-Logo.svg.png",
+    "Honda": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/200px-Honda.svg.png",
+    "BMW": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/200px-BMW.svg.png"
 }
 
 ENGINE_CAPACITIES = {
