@@ -11,6 +11,7 @@ import DataFetchCard from "@/components/cards/DataFetchCard";
 import VehicleSummaryCard from "@/components/cards/VehicleSummaryCard";
 import PaymentGateway from "@/components/cards/PaymentGateway";
 import PolicyPopup from "@/components/cards/PolicyPopup";
+import AddonsCard from "@/components/cards/AddonsCard";
 
 const INCOME_LOGO = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/d6i0a1n5_image.png";
 const JIFFY_JANE = "https://customer-assets.emergentagent.com/job_563e7fa0-9b63-4fef-a677-9b1ace8339d0/artifacts/1czfonbv_image.png";
