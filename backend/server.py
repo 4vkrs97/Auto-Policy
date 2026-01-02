@@ -742,7 +742,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         return {
             "message": f"🎉 Great news! Based on your profile, here's your personalized quote:",
             "quick_replies": [
-                {"label": "✓ Accept & Generate Policy", "value": "accept_quote"},
+                {"label": "✓ Proceed to Payment", "value": "proceed_to_payment"},
                 {"label": "Modify Quote", "value": "modify"}
             ],
             "next_agent": "pricing",
@@ -751,8 +751,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "gross_premium": round(gross, 2),
                 "ncd_discount": round(ncd_discount, 2),
                 "telematics_discount": round(telematics_discount, 2),
-                "final_premium": round(final, 2),
-                "policy_number": policy_num
+                "final_premium": round(final, 2)
             },
             "show_cards": True,
             "cards": [{
@@ -763,6 +762,69 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "premium": f"${round(final, 2)}/year",
                 "breakdown": breakdown
             }]
+        }
+    
+    # Payment initiated - show payment gateway options
+    if state.get("payment_initiated") and not state.get("payment_completed"):
+        return {
+            "message": "💳 Please complete your payment to finalize your policy. Select your preferred payment method:",
+            "quick_replies": [
+                {"label": "Open Payment Gateway", "value": "open_payment_gateway"}
+            ],
+            "next_agent": "payment",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "payment_gateway",
+                "amount": f"${state.get('final_premium', 0)}",
+                "currency": "SGD",
+                "payment_methods": [
+                    {"id": "paynow", "name": "PayNow", "icon": "paynow"},
+                    {"id": "card", "name": "Credit/Debit Card", "icon": "card"},
+                    {"id": "grabpay", "name": "GrabPay", "icon": "grabpay"},
+                    {"id": "paylah", "name": "DBS PayLah!", "icon": "paylah"},
+                    {"id": "nets", "name": "NETS", "icon": "nets"}
+                ]
+            }]
+        }
+    
+    # Payment completed - generate policy
+    if state.get("payment_completed") and not state.get("documents_ready"):
+        # Generate policy number in format TRV-YYYY-XXXXX
+        current_year = datetime.now().year
+        sequence_num = str(uuid.uuid4().int)[:5]  # 5 digit sequence
+        policy_num = f"TRV-{current_year}-{sequence_num}"
+        
+        now = datetime.now()
+        start_date = now.strftime("%d %b %Y")
+        end_date = (now.replace(year=now.year + 1)).strftime("%d %b %Y")
+        
+        return {
+            "message": "🎊 Payment successful! Your policy has been generated.",
+            "quick_replies": [
+                {"label": "📄 Download PDF", "value": "download_pdf"},
+                {"label": "Start New Quote", "value": "new_quote"}
+            ],
+            "next_agent": "document",
+            "data_collected": {
+                "documents_ready": True,
+                "policy_number": policy_num
+            },
+            "show_cards": True,
+            "cards": [{
+                "type": "policy_document",
+                "policy_number": policy_num,
+                "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
+                "coverage": state.get("coverage_type", "comprehensive").replace("_", " ").title(),
+                "plan": state.get("plan_name", "Drive Classic"),
+                "premium": f"${state.get('final_premium', 0)}/year",
+                "start_date": start_date,
+                "end_date": end_date,
+                "driver_name": state.get("driver_name", "Tan Ah Kow"),
+                "ncd_percentage": f"{state.get('ncd_percent', 0)}%",
+                "payment_reference": state.get("payment_reference", "")
+            }],
+            "show_policy_popup": True
         }
     
     # Handle modification choices
