@@ -399,12 +399,12 @@ export const ChatPage = () => {
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex justify-between text-xs text-gray-500 mb-2">
                   <span>Progress</span>
-                  <span>{Math.round((completedAgents.length / AGENTS.length) * 100)}%</span>
+                  <span>{Math.min(100, Math.round((completedAgents.length / AGENTS.length) * 100))}%</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
-                    style={{ width: `${(completedAgents.length / AGENTS.length) * 100}%` }}
+                    style={{ width: `${Math.min(100, (completedAgents.length / AGENTS.length) * 100)}%` }}
                   />
                 </div>
               </div>
