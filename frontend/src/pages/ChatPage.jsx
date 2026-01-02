@@ -168,6 +168,12 @@ export const ChatPage = () => {
       if (data.state?.policy_number) {
         setPolicyNumber(data.state.policy_number);
       }
+      
+      // Check if we should show policy popup
+      if (data.message?.show_policy_popup) {
+        setShowPolicyPopup(true);
+        setPolicyNumber(data.state?.policy_number);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       setIsTyping(false);
@@ -176,7 +182,44 @@ export const ChatPage = () => {
   };
 
   const handleQuickReply = (value, label) => {
+    // Check if this is a payment gateway trigger
+    if (value === "proceed_to_payment" || value === "open_payment_gateway") {
+      setPaymentAmount(session?.state?.final_premium || 0);
+      setShowPaymentGateway(true);
+      return;
+    }
     sendMessage(label, value);
+  };
+
+  const handlePaymentComplete = async (paymentMethod, paymentRef, policyNum) => {
+    setShowPaymentGateway(false);
+    setPolicyNumber(policyNum);
+    setShowPolicyPopup(true);
+    
+    // Update local state
+    setSession(prev => ({
+      ...prev,
+      state: {
+        ...prev?.state,
+        payment_completed: true,
+        payment_method: paymentMethod,
+        payment_reference: paymentRef,
+        policy_number: policyNum,
+        documents_ready: true
+      }
+    }));
+    
+    // Update current agent to document
+    setCurrentAgent("document");
+    if (!completedAgents.includes("payment")) {
+      setCompletedAgents(prev => [...prev, "payment"]);
+    }
+    if (!completedAgents.includes("document")) {
+      setCompletedAgents(prev => [...prev, "document"]);
+    }
+    
+    // Send a message to update the chat
+    sendMessage("Payment completed", "payment_completed");
   };
 
   const handleSubmit = (e) => {
