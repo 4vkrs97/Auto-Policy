@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 import json
 import asyncio
+import httpx
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
