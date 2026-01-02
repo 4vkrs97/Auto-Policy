@@ -540,6 +540,24 @@ export const ChatPage = () => {
         </div>
         Made with Emergent
       </div>
+
+      {/* Payment Gateway Modal */}
+      {showPaymentGateway && (
+        <PaymentGateway
+          sessionId={session?.id}
+          amount={paymentAmount}
+          onClose={() => setShowPaymentGateway(false)}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
+
+      {/* Policy Generated Popup */}
+      {showPolicyPopup && (
+        <PolicyPopup
+          policyNumber={policyNumber}
+          onClose={() => setShowPolicyPopup(false)}
+        />
+      )}
     </div>
   );
 };
@@ -559,6 +577,7 @@ function getIconForReply(value) {
   if (valueLower.includes('confirm') || valueLower.includes('accept')) return Check;
   if (valueLower.includes('download') || valueLower.includes('pdf')) return Download;
   if (valueLower.includes('view') || valueLower.includes('quote')) return FileText;
+  if (valueLower.includes('payment') || valueLower.includes('proceed')) return CreditCard;
   
   return Calendar;
 }
