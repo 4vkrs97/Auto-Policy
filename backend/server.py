@@ -1125,8 +1125,13 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         state["view_quote"] = True
     
     # Accept quote
-    if input_lower in ["accept_quote", "✓ accept & generate policy", "accept & generate policy"]:
+    if input_lower in ["accept_quote", "✓ accept & generate policy", "accept & generate policy", "proceed_to_payment", "✓ proceed to payment"]:
         state["quote_accepted"] = True
+        state["payment_initiated"] = True
+    
+    # Payment completed
+    if input_lower in ["payment_completed", "payment_success"]:
+        state["payment_completed"] = True
     
     # Modify quote - reset pricing state to allow modification
     if input_lower in ["modify", "modify quote", "modify_quote"]:
