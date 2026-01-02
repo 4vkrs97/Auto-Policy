@@ -878,38 +878,6 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             }
         }
     
-    # Quote accepted, generate policy document
-    if state.get("final_premium"):
-        policy_num = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
-        from datetime import datetime
-        
-        now = datetime.now()
-        start_date = now.strftime("%d %b %Y")
-        end_date = (now.replace(year=now.year + 1)).strftime("%d %b %Y")
-        
-        return {
-            "message": "🎊 Congratulations! Your policy has been generated successfully. You can review your policy details below and download the PDF document.",
-            "quick_replies": [
-                {"label": "📄 Download PDF", "value": "download_pdf"},
-                {"label": "Start New Quote", "value": "new_quote"}
-            ],
-            "next_agent": "document",
-            "data_collected": {"documents_ready": True},
-            "show_cards": True,
-            "cards": [{
-                "type": "policy_document",
-                "policy_number": policy_num,
-                "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
-                "coverage": state.get("coverage_type", "comprehensive").replace("_", " ").title(),
-                "plan": state.get("plan_name", "Drive Classic"),
-                "premium": f"${state.get('final_premium', 0)}/year",
-                "start_date": start_date,
-                "end_date": end_date,
-                "driver_name": state.get("driver_name", "Tan Ah Kow"),
-                "ncd_percentage": f"{state.get('ncd_percent', 0)}%"
-            }]
-        }
-    
     # Default fallback
     return {
         "message": "I'm here to help! Let me know what you'd like to do.",
