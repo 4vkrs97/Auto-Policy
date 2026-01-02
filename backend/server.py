@@ -1473,12 +1473,44 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         else:
             state["additional_drivers"] = "add"
     
-    # Telematics
+    # Telematics - Question 1: Data sharing willingness
+    if input_lower in ["data_sharing_yes", "✓ yes, i am willing", "yes, i am willing"]:
+        state["telematics_data_sharing"] = "yes"
+        return state
+    if input_lower in ["data_sharing_no", "✗ no, i am not willing", "no, i am not willing"]:
+        state["telematics_data_sharing"] = "no"
+        return state
+    
+    # Telematics - Question 2: GPS/speed/braking consent
+    if input_lower in ["gps_consent_yes", "✓ yes, i consent", "yes, i consent"]:
+        state["telematics_gps_consent"] = "yes"
+        return state
+    if input_lower in ["gps_consent_no", "✗ no, i do not consent", "no, i do not consent"]:
+        state["telematics_gps_consent"] = "no"
+        return state
+    
+    # Telematics - Question 3: Safety alerts
+    if input_lower in ["safety_alerts_yes", "✓ yes, i am comfortable", "yes, i am comfortable"]:
+        state["telematics_safety_alerts"] = "yes"
+        return state
+    if input_lower in ["safety_alerts_no", "✗ no, i am not comfortable", "no, i am not comfortable"]:
+        state["telematics_safety_alerts"] = "no"
+        return state
+    
+    # Continue without telematics
+    if input_lower in ["continue_no_telematics", "continue"]:
+        if not state.get("telematics_consent"):
+            state["telematics_consent"] = "no"
+        return state
+    
+    # Telematics final opt-in
     if state.get("additional_drivers") and not state.get("telematics_consent"):
-        if "yes" in input_lower or "save" in input_lower:
+        if input_lower in ["yes", "🚗 yes, enroll & save 15%!", "yes, enroll & save 15%!", "yes, save 15%!", "save"]:
             state["telematics_consent"] = "yes"
+            return state
         elif input_lower in ["no", "no thanks"]:
             state["telematics_consent"] = "no"
+            return state
     
     # View quote
     if input_lower in ["view_quote", "view my quote"]:
