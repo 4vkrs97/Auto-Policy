@@ -1244,6 +1244,86 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     
     return state
 
+@api_router.get("/vin/lookup/{vin}")
+async def lookup_vin(vin: str):
+    """Lookup vehicle details from VIN using NHTSA API"""
+    # Validate VIN length
+    if len(vin) != 17:
+        raise HTTPException(status_code=400, detail="VIN must be exactly 17 characters")
+    
+    # Call NHTSA VIN Decoder API (free, real-time)
+    nhtsa_url = f"https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{vin}?format=json"
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(nhtsa_url, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+        
+        # Parse NHTSA response
+        results = data.get("Results", [])
+        
+        # Create a dict from the results
+        vin_data = {}
+        for item in results:
+            variable = item.get("Variable", "")
+            value = item.get("Value")
+            if value and value.strip():
+                vin_data[variable] = value.strip()
+        
+        # Extract relevant fields
+        make = vin_data.get("Make", "Unknown")
+        model = vin_data.get("Model", "Unknown")
+        year = vin_data.get("Model Year", "Unknown")
+        
+        # Determine engine capacity from displacement
+        displacement = vin_data.get("Displacement (L)", "")
+        if displacement:
+            try:
+                disp_float = float(displacement)
+                if disp_float <= 1.0:
+                    engine_capacity = "1000cc and below"
+                elif disp_float <= 1.6:
+                    engine_capacity = "1001cc - 1600cc"
+                elif disp_float <= 2.0:
+                    engine_capacity = "1601cc - 2000cc"
+                elif disp_float <= 3.0:
+                    engine_capacity = "2001cc - 3000cc"
+                else:
+                    engine_capacity = "Above 3000cc"
+            except:
+                engine_capacity = "1601cc - 2000cc"
+        else:
+            engine_capacity = "1601cc - 2000cc"
+        
+        fuel_type = vin_data.get("Fuel Type - Primary", "Gasoline")
+        body_class = vin_data.get("Body Class", "Sedan")
+        
+        return {
+            "success": True,
+            "vin": vin.upper(),
+            "make": make,
+            "model": model,
+            "year": year,
+            "engine_capacity": engine_capacity,
+            "fuel_type": fuel_type,
+            "body_class": body_class,
+            "raw_data": {
+                "displacement": displacement,
+                "cylinders": vin_data.get("Engine Number of Cylinders", ""),
+                "drive_type": vin_data.get("Drive Type", ""),
+                "vehicle_type": vin_data.get("Vehicle Type", "")
+            }
+        }
+        
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="VIN lookup timed out")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=502, detail=f"VIN lookup failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"VIN lookup error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"VIN lookup error: {str(e)}")
+
 @api_router.get("/messages/{session_id}", response_model=List[Message])
 async def get_messages(session_id: str):
     """Get all messages for a session"""
