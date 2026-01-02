@@ -929,7 +929,26 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         gross = base * plan_mult
         ncd_discount = gross * (ncd_percent / 100)
         telematics_discount = gross * (telematics_percent / 100)
-        final = gross - ncd_discount - telematics_discount
+        
+        # Calculate add-ons if any
+        addon_engine = state.get("addon_engine_protection", False)
+        addon_total_loss = state.get("addon_total_loss", False)
+        addon_roadside = state.get("addon_roadside", False)
+        
+        # Singapore industry standard add-on pricing
+        engine_protection_price = 120.00  # Engine & gearbox protection
+        total_loss_price = 80.00  # Full total loss coverage / NCD protector
+        roadside_price = 45.00  # 24/7 roadside assistance
+        
+        addons_total = 0
+        if addon_engine:
+            addons_total += engine_protection_price
+        if addon_total_loss:
+            addons_total += total_loss_price
+        if addon_roadside:
+            addons_total += roadside_price
+        
+        final = gross - ncd_discount - telematics_discount + addons_total
         
         # Calculate plan loading amount
         plan_loading = base * (plan_mult - 1) if plan_mult > 1 else 0
@@ -950,12 +969,21 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         if telematics_discount > 0:
             breakdown.append({"item": f"Smart Driver Discount ({telematics_percent}%)", "amount": f"-${round(telematics_discount, 2)}"})
         
+        # Add add-ons to breakdown if selected
+        if addon_engine:
+            breakdown.append({"item": "🛡️ Engine Protection", "amount": f"+${engine_protection_price}"})
+        if addon_total_loss:
+            breakdown.append({"item": "📋 Total Loss Coverage", "amount": f"+${total_loss_price}"})
+        if addon_roadside:
+            breakdown.append({"item": "🚗 Roadside Assistance", "amount": f"+${roadside_price}"})
+        
         breakdown.append({"item": "Final Premium", "amount": f"${round(final, 2)}"})
         
         return {
             "message": f"🎉 Great news! Based on your profile, here's your personalized quote:",
             "quick_replies": [
                 {"label": "✓ Proceed to Payment", "value": "proceed_to_payment"},
+                {"label": "🛡️ Customize", "value": "customize_coverage"},
                 {"label": "Modify Quote", "value": "modify"}
             ],
             "next_agent": "pricing",
@@ -964,6 +992,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "gross_premium": round(gross, 2),
                 "ncd_discount": round(ncd_discount, 2),
                 "telematics_discount": round(telematics_discount, 2),
+                "addons_total": round(addons_total, 2),
                 "final_premium": round(final, 2)
             },
             "show_cards": True,
@@ -973,7 +1002,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "coverage_type": coverage_type.replace("_", " ").title(),
                 "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
                 "premium": f"${round(final, 2)}/year",
-                "breakdown": breakdown
+                "breakdown": breakdown,
+                "has_addons": addons_total > 0
             }]
         }
     
