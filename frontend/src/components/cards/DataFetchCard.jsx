@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Car, User, Shield, CheckCircle, Loader2 } from "lucide-react";
+import { Car, User, Shield, CheckCircle, Loader2, Hash } from "lucide-react";
 
 const FETCH_ITEMS = {
   vehicle: {
@@ -12,6 +12,19 @@ const FETCH_ITEMS = {
       { label: "Engine Capacity", key: "engine_cc" },
       { label: "Year of Registration", key: "year" },
       { label: "Road Tax Status", key: "road_tax" },
+    ]
+  },
+  vin: {
+    icon: Hash,
+    title: "Fetching Vehicle Details from VIN",
+    items: [
+      { label: "VIN Number", key: "vin" },
+      { label: "Make", key: "make" },
+      { label: "Model", key: "model" },
+      { label: "Year", key: "year" },
+      { label: "Engine Capacity", key: "engine" },
+      { label: "Fuel Type", key: "fuel_type" },
+      { label: "Body Class", key: "body_class" },
     ]
   },
   singpass: {
