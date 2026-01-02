@@ -1481,7 +1481,19 @@ async def generate_html_document(session_id: str):
             "premium": state.get("final_premium", 0),
             "ncd_discount": state.get("ncd_discount", 0),
             "telematics_discount": state.get("telematics_discount", 0)
-        }
+        },
+        "exclusions": [
+            "Driving under the influence of alcohol or drugs",
+            "Driving without a valid license",
+            "Use of vehicle for illegal purposes",
+            "Mechanical or electrical breakdown, wear and tear",
+            "Damage caused by war, terrorism, or nuclear risks",
+            "Consequential or indirect losses",
+            "Personal belongings left in the vehicle",
+            "Racing, speed testing, or rallies",
+            "Using vehicle for hire/reward (unless declared)",
+            "Damage while vehicle is used outside Singapore/West Malaysia"
+        ]
     }
 
 class PaymentRequest(BaseModel):
