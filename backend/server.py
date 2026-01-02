@@ -1109,6 +1109,32 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     input_lower = user_input.lower()
     input_upper = user_input.upper()
     
+    # VIN check responses
+    if input_lower in ["has_vin_yes", "yes, i have vin"]:
+        state["has_vin"] = "yes"
+        return state
+    
+    if input_lower in ["has_vin_no", "no, enter manually"]:
+        state["has_vin"] = "no"
+        return state
+    
+    # VIN confirmation
+    if input_lower in ["confirm_vin_vehicle", "✓ confirm vehicle"]:
+        vin_data = state.get("vin_data", {})
+        state["vin_confirmed"] = True
+        state["vehicle_make"] = vin_data.get("make", "Unknown")
+        state["vehicle_model"] = vin_data.get("model", "Unknown")
+        state["vehicle_year"] = vin_data.get("year", "Unknown")
+        state["engine_capacity"] = vin_data.get("engine_capacity", "1601cc - 2000cc")
+        return state
+    
+    if input_lower in ["enter_manually", "enter manually instead"]:
+        state["has_vin"] = "no"
+        state["vin_lookup_done"] = False
+        state["vin_number"] = None
+        state["vin_data"] = None
+        return state
+    
     # Vehicle type
     if input_lower in ["car", "motorcycle", "🚗 car", "🏍️ motorcycle"]:
         state["vehicle_type"] = "car" if "car" in input_lower else "motorcycle"
@@ -1116,6 +1142,12 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     
     # Vehicle make - check against known makes
     if state.get("vehicle_type") and not state.get("vehicle_make"):
+        # Skip if waiting for VIN
+        if state.get("vehicle_type") == "car" and state.get("has_vin") is None:
+            return state
+        if state.get("has_vin") == "yes" and not state.get("vin_lookup_done"):
+            return state
+            
         all_makes = VEHICLE_MAKES.get(state.get("vehicle_type"), [])
         for make in all_makes:
             if make.lower() == input_lower:
