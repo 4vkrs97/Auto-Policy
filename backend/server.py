@@ -782,17 +782,69 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Additional drivers recorded, ask about telematics
-    if state.get("additional_drivers") and not state.get("telematics_consent"):
+    # Additional drivers recorded, ask about telematics - Question 1: Willingness to share data
+    if state.get("additional_drivers") and state.get("telematics_data_sharing") is None:
         return {
-            "message": "🚗 Would you like to opt-in for our Smart Driver programme? By allowing us to monitor your driving habits through our app, you can save up to 15% on your premium!",
+            "message": "📱 **Smart Driver Programme**\n\nOur telematics-based insurance can help you save up to 15% on your premium by monitoring your driving behaviour.\n\n**Are you willing to share your driving behaviour data via a mobile app or in-vehicle device?**",
             "quick_replies": [
-                {"label": "Yes, Save 15%!", "value": "yes"},
-                {"label": "No Thanks", "value": "no"}
+                {"label": "✓ Yes, I am willing", "value": "data_sharing_yes"},
+                {"label": "✗ No, I am not willing", "value": "data_sharing_no"}
             ],
             "next_agent": "telematics",
             "data_collected": {}
         }
+    
+    # Telematics Question 2: Consent to use GPS/speed/braking data
+    if state.get("telematics_data_sharing") == "yes" and state.get("telematics_gps_consent") is None:
+        return {
+            "message": "**Do you consent to the use of GPS, speed, braking, and mileage data for pricing purposes?**",
+            "quick_replies": [
+                {"label": "✓ Yes, I consent", "value": "gps_consent_yes"},
+                {"label": "✗ No, I do not consent", "value": "gps_consent_no"}
+            ],
+            "next_agent": "telematics",
+            "data_collected": {}
+        }
+    
+    # Telematics Question 3: Safety feedback and alerts
+    if state.get("telematics_gps_consent") == "yes" and state.get("telematics_safety_alerts") is None:
+        return {
+            "message": "**Are you comfortable receiving driving safety feedback and alerts based on your driving data?**",
+            "quick_replies": [
+                {"label": "✓ Yes, I am comfortable", "value": "safety_alerts_yes"},
+                {"label": "✗ No, I am not comfortable", "value": "safety_alerts_no"}
+            ],
+            "next_agent": "telematics",
+            "data_collected": {}
+        }
+    
+    # Telematics final opt-in (only if all consents given)
+    if state.get("additional_drivers") and state.get("telematics_consent") is None:
+        # Check if user declined at any point
+        if state.get("telematics_data_sharing") == "no" or state.get("telematics_gps_consent") == "no":
+            # User declined, set telematics_consent to no and continue
+            return {
+                "message": "No problem! You can still get a great quote without the Smart Driver programme. Let me calculate your premium.",
+                "quick_replies": [
+                    {"label": "Continue", "value": "continue_no_telematics"}
+                ],
+                "next_agent": "telematics",
+                "data_collected": {
+                    "telematics_consent": "no"
+                }
+            }
+        
+        # All consents given, show final opt-in
+        if state.get("telematics_safety_alerts") is not None:
+            return {
+                "message": "🎉 Great! You've agreed to all the requirements for our Smart Driver programme.\n\n**By opting in, you can save up to 15% on your premium!**\n\nWould you like to enroll in the Smart Driver programme?",
+                "quick_replies": [
+                    {"label": "🚗 Yes, Enroll & Save 15%!", "value": "yes"},
+                    {"label": "No Thanks", "value": "no"}
+                ],
+                "next_agent": "telematics",
+                "data_collected": {}
+            }
     
     # Telematics recorded, calculate and show risk assessment then premium
     if state.get("telematics_consent") and not state.get("risk_assessed") and not state.get("modify_quote") and not state.get("change_coverage") and not state.get("change_plan") and not state.get("change_telematics"):
