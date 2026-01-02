@@ -1230,7 +1230,8 @@ async def send_message(input: MessageCreate):
         content=response.get("message", ""),
         agent=next_agent,
         quick_replies=response.get("quick_replies"),
-        cards=response.get("cards")
+        cards=response.get("cards"),
+        show_brand_logos=response.get("show_brand_logos")
     )
     assistant_doc = assistant_msg.model_dump()
     assistant_doc['created_at'] = assistant_doc['created_at'].isoformat()
