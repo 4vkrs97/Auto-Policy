@@ -1063,6 +1063,34 @@ async def send_message(input: MessageCreate):
     # Process quick reply value if present
     message_content = input.quick_reply_value or input.content
     
+    # Check if this is a VIN input (17 alphanumeric characters)
+    is_vin_input = (
+        state.get("has_vin") == "yes" and 
+        not state.get("vin_lookup_done") and 
+        len(message_content.replace(" ", "").replace("-", "")) == 17
+    )
+    
+    if is_vin_input:
+        # Perform VIN lookup
+        vin = message_content.replace(" ", "").replace("-", "").upper()
+        try:
+            vin_result = await lookup_vin(vin)
+            state["vin_number"] = vin
+            state["vin_lookup_done"] = True
+            state["vin_data"] = {
+                "make": vin_result.get("make", "Unknown"),
+                "model": vin_result.get("model", "Unknown"),
+                "year": vin_result.get("year", "Unknown"),
+                "engine_capacity": vin_result.get("engine_capacity", "1601cc - 2000cc"),
+                "fuel_type": vin_result.get("fuel_type", "Unknown"),
+                "body_class": vin_result.get("body_class", "Unknown")
+            }
+        except Exception as e:
+            logger.error(f"VIN lookup failed: {str(e)}")
+            # Fall back to manual entry
+            state["has_vin"] = "no"
+            state["vin_lookup_done"] = False
+    
     # Update state based on user input
     updated_state = update_state_from_input(state, message_content, current_agent)
     
