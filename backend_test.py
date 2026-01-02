@@ -223,13 +223,174 @@ class MotorInsuranceAPITester:
         
         return success1 and success2
     
-    def test_messages_endpoint(self):
-        """Test messages retrieval"""
-        if not self.session_id:
-            self.log("❌ No session ID available for messages test")
+    def test_payment_methods(self):
+        """Test payment methods endpoint"""
+        success, response = self.run_test(
+            "Payment Methods",
+            "GET",
+            "payment/methods"
+        )
+        
+        if success and 'methods' in response:
+            methods = response['methods']
+            if len(methods) == 5:
+                self.log(f"   ✅ Found {len(methods)} payment methods as expected")
+                # Check for Singapore payment methods
+                method_ids = [method['id'] for method in methods]
+                expected_methods = ['paynow', 'card', 'grabpay', 'paylah', 'nets']
+                
+                all_present = all(method_id in method_ids for method_id in expected_methods)
+                if all_present:
+                    self.log("   ✅ All expected Singapore payment methods present")
+                    return True
+                else:
+                    missing = [m for m in expected_methods if m not in method_ids]
+                    self.log(f"   ❌ Missing payment methods: {missing}")
+                    return False
+            else:
+                self.log(f"   ❌ Expected 5 payment methods, got {len(methods)}")
+                return False
+        else:
+            self.log("   ❌ Invalid response format or missing 'methods' field")
             return False
+    
+    def complete_quote_flow(self):
+        """Complete the full quote flow to get final_premium"""
+        if not self.session_id:
+            self.log("❌ No session ID available for quote flow")
+            return False, 0
+        
+        self.log("🔄 Completing quote flow to get final premium...")
+        
+        # Step-by-step quote completion
+        steps = [
+            ("car", "Vehicle Type"),
+            ("Toyota", "Vehicle Make"),
+            ("Camry", "Vehicle Model"),
+            ("1601cc - 2000cc", "Engine Capacity"),
+            ("no_offpeak", "Off-peak Status"),
+            ("confirm_vehicle", "Confirm Vehicle"),
+            ("comprehensive", "Coverage Type"),
+            ("Drive Premium", "Plan Selection"),
+            ("singpass", "Driver Info Method"),
+            ("consent_yes", "Singpass Consent"),
+            ("confirm_driver", "Confirm Driver"),
+            ("no_claims", "Claims History"),
+            ("none", "Additional Drivers"),
+            ("yes", "Telematics Consent"),
+            ("view_quote", "View Quote")
+        ]
+        
+        for step_value, step_name in steps:
+            success, response = self.run_test(
+                f"Quote Flow - {step_name}",
+                "POST",
+                "chat",
+                200,
+                data={
+                    "session_id": self.session_id,
+                    "content": step_value,
+                    "quick_reply_value": step_value
+                }
+            )
             
-        return self.run_test("Get Messages", "GET", f"messages/{self.session_id}")[0]
+            if not success:
+                self.log(f"❌ Quote flow failed at step: {step_name}")
+                return False, 0
+            
+            # Small delay between steps
+            time.sleep(0.1)
+        
+        # Get session to check final premium
+        success, session_data = self.run_test(
+            "Get Session for Premium",
+            "GET",
+            f"sessions/{self.session_id}"
+        )
+        
+        if success and 'state' in session_data:
+            final_premium = session_data['state'].get('final_premium', 0)
+            if final_premium > 0:
+                self.log(f"   ✅ Quote completed with final premium: ${final_premium}")
+                return True, final_premium
+            else:
+                self.log("   ❌ Final premium not calculated or is zero")
+                return False, 0
+        else:
+            self.log("   ❌ Could not retrieve session data")
+            return False, 0
+    
+    def test_payment_process(self):
+        """Test payment processing endpoint"""
+        # First complete the quote flow
+        quote_success, final_premium = self.complete_quote_flow()
+        if not quote_success:
+            self.log("❌ Cannot test payment without completed quote")
+            return False
+        
+        # Test payment processing with different methods
+        payment_methods = ["paynow", "card", "grabpay", "paylah", "nets"]
+        
+        for method in payment_methods:
+            success, response = self.run_test(
+                f"Payment Process - {method.upper()}",
+                "POST",
+                "payment/process",
+                200,
+                data={
+                    "session_id": self.session_id,
+                    "payment_method": method,
+                    "amount": final_premium
+                }
+            )
+            
+            if success:
+                # Verify response format
+                if all(key in response for key in ['success', 'payment_reference', 'policy_number', 'message']):
+                    # Check payment reference format: PAY-YYYYMMDD-XXXXXXXX
+                    payment_ref = response['payment_reference']
+                    if payment_ref.startswith('PAY-') and len(payment_ref) == 21:
+                        self.log(f"   ✅ Payment reference format correct: {payment_ref}")
+                    else:
+                        self.log(f"   ❌ Invalid payment reference format: {payment_ref}")
+                        return False
+                    
+                    # Check policy number format: TRV-YYYY-XXXXX
+                    policy_num = response['policy_number']
+                    if policy_num.startswith('TRV-') and len(policy_num) >= 10:
+                        self.log(f"   ✅ Policy number format correct: {policy_num}")
+                    else:
+                        self.log(f"   ❌ Invalid policy number format: {policy_num}")
+                        return False
+                    
+                    # Verify session state updated
+                    success_session, session_data = self.run_test(
+                        "Verify Payment State",
+                        "GET",
+                        f"sessions/{self.session_id}"
+                    )
+                    
+                    if success_session and 'state' in session_data:
+                        state = session_data['state']
+                        if state.get('payment_completed') == True:
+                            self.log(f"   ✅ Session state updated with payment_completed=True")
+                            return True
+                        else:
+                            self.log(f"   ❌ Session state not updated correctly")
+                            return False
+                    else:
+                        self.log(f"   ❌ Could not verify session state")
+                        return False
+                else:
+                    self.log(f"   ❌ Missing required fields in payment response")
+                    return False
+            else:
+                return False
+            
+            # Only test one payment method to avoid duplicate payments
+            break
+        
+        return True
     
     def run_all_tests(self):
         """Run all API tests"""
