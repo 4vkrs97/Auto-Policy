@@ -180,7 +180,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Modify Quote functionality - allows users to change coverage, plan, or telematics"
+    - "Payment Processing feature - GET /api/payment/methods and POST /api/payment/process"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
