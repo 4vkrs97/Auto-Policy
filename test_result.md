@@ -140,6 +140,25 @@ backend:
           
           The modify quote functionality is now fully working as specified in the requirements.
 
+  - task: "Payment Processing feature - GET /api/payment/methods and POST /api/payment/process"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: |
+          NEW TESTING REQUEST: Payment Processing feature needs comprehensive testing:
+          1. GET /api/payment/methods - Should return 5 Singapore payment options
+          2. POST /api/payment/process - Should process payment and return payment_reference and policy_number
+          3. Test flow: Create session -> Complete quote -> Process payment
+          4. Verify payment_reference format: PAY-YYYYMMDD-XXXXXXXX
+          5. Verify policy_number format: TRV-YYYY-XXXXX
+          6. Verify session state updated with payment_completed=True
+
 frontend:
   - task: "No frontend changes required - frontend already renders quick reply buttons correctly"
     implemented: true
