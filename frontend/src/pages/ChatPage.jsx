@@ -290,6 +290,8 @@ export const ChatPage = () => {
           return <DataFetchCard key={index} type="singpass" data={card.data} />;
         case "risk_fetch":
           return <DataFetchCard key={index} type="risk" data={card.data} />;
+        case "coverage_addons":
+          return <AddonsCard key={index} card={card} sessionId={session?.id} onAddonsUpdated={() => {}} />;
         default:
           return null;
       }
