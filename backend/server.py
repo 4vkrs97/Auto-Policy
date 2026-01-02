@@ -1594,6 +1594,24 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
     if input_lower in ["view_quote", "view my quote"]:
         state["view_quote"] = True
     
+    # Customize coverage - open add-ons selection
+    if input_lower in ["customize_coverage", "🛡️ customize", "customize"]:
+        state["show_customize"] = True
+        return state
+    
+    # Skip add-ons
+    if input_lower in ["skip_addons", "skip add-ons"]:
+        state["show_customize"] = False
+        return state
+    
+    # Apply add-ons - recalculate premium
+    if input_lower in ["apply_addons", "✓ apply add-ons", "apply add-ons"]:
+        state["show_customize"] = False
+        # Reset premium to trigger recalculation with add-ons
+        state["final_premium"] = None
+        state["risk_assessed"] = True  # Keep risk assessed to skip risk flow
+        return state
+    
     # Accept quote
     if input_lower in ["accept_quote", "✓ accept & generate policy", "accept & generate policy", "proceed_to_payment", "✓ proceed to payment"]:
         state["quote_accepted"] = True
