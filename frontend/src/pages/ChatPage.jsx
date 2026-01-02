@@ -471,18 +471,42 @@ export const ChatPage = () => {
                    message.quick_replies.length > 0 &&
                    !isTyping && (
                     <div className="ml-[52px] mt-3">
-                      <div className="action-buttons-grid">
+                      <div className={message.show_brand_logos ? "brand-buttons-grid" : "action-buttons-grid"}>
                         {message.quick_replies.map((reply, idx) => {
                           const IconComponent = getIconForReply(reply.value);
+                          const hasLogo = reply.logo && message.show_brand_logos;
+                          
                           return (
                             <button
                               key={idx}
                               onClick={() => handleQuickReply(reply.value, reply.label)}
-                              className="action-button"
+                              className={hasLogo ? "brand-button" : "action-button"}
                               data-testid={`quick-reply-${idx}`}
                             >
-                              <IconComponent className="w-4 h-4" />
-                              {reply.label}
+                              {hasLogo ? (
+                                <>
+                                  <div className="brand-logo-container">
+                                    <img 
+                                      src={reply.logo} 
+                                      alt={reply.label} 
+                                      className="brand-logo"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling.style.display = 'flex';
+                                      }}
+                                    />
+                                    <div className="brand-logo-fallback" style={{display: 'none'}}>
+                                      {reply.label.charAt(0)}
+                                    </div>
+                                  </div>
+                                  <span className="brand-name">{reply.label}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconComponent className="w-4 h-4" />
+                                  {reply.label}
+                                </>
+                              )}
                             </button>
                           );
                         })}
