@@ -223,6 +223,14 @@ class MotorInsuranceAPITester:
         
         return success1 and success2
     
+    def test_messages_endpoint(self):
+        """Test messages retrieval"""
+        if not self.session_id:
+            self.log("❌ No session ID available for messages test")
+            return False
+            
+        return self.run_test("Get Messages", "GET", f"messages/{self.session_id}")[0]
+    
     def test_payment_methods(self):
         """Test payment methods endpoint"""
         success, response = self.run_test(
