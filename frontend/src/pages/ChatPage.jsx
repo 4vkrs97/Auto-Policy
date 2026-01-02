@@ -160,9 +160,14 @@ export const ChatPage = () => {
       setSession(prev => ({ ...prev, state: data.state, current_agent: data.current_agent }));
       setCurrentAgent(data.current_agent);
       
-      // Track completed agents
-      if (data.current_agent && !completedAgents.includes(data.current_agent)) {
-        setCompletedAgents(prev => [...prev, data.current_agent]);
+      // Track completed agents - only add valid agents from AGENTS list
+      const validAgentKeys = AGENTS.map(a => a.key);
+      if (data.current_agent && validAgentKeys.includes(data.current_agent) && !completedAgents.includes(data.current_agent)) {
+        setCompletedAgents(prev => {
+          const newAgents = [...prev, data.current_agent];
+          // Filter to only include valid agents and remove duplicates
+          return [...new Set(newAgents.filter(a => validAgentKeys.includes(a)))];
+        });
       }
       
       if (data.state?.policy_number) {
