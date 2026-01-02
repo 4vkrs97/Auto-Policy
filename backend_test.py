@@ -392,6 +392,16 @@ class MotorInsuranceAPITester:
         
         return True
     
+    def test_payment_endpoints(self):
+        """Test payment-related endpoints"""
+        # Test payment methods
+        methods_success = self.test_payment_methods()
+        
+        # Test payment processing (includes quote flow)
+        process_success = self.test_payment_process()
+        
+        return methods_success and process_success
+    
     def run_all_tests(self):
         """Run all API tests"""
         self.log("🚀 Starting Motor Insurance API Tests")
