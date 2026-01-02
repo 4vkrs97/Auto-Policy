@@ -100,56 +100,56 @@ const PaymentGateway = ({ sessionId, amount, onClose, onPaymentComplete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CreditCard className="w-6 h-6 text-white" />
-            <h2 className="text-xl font-bold text-white font-['Outfit']">Payment Gateway</h2>
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-white" />
+            <h2 className="text-lg font-bold text-white font-['Outfit']">Payment Gateway</h2>
           </div>
           {step === "select" && (
             <button
               onClick={onClose}
               className="text-white/80 hover:text-white transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           {step === "select" && (
             <>
               {/* Amount */}
-              <div className="text-center mb-6">
-                <p className="text-gray-500 text-sm">Amount to Pay</p>
-                <p className="text-4xl font-bold text-gray-900 font-['Outfit']">
+              <div className="text-center mb-4">
+                <p className="text-gray-500 text-xs">Amount to Pay</p>
+                <p className="text-2xl font-bold text-gray-900 font-['Outfit']">
                   S${amount.toFixed(2)}
                 </p>
-                <p className="text-gray-400 text-xs mt-1">Annual Premium (incl. GST)</p>
+                <p className="text-gray-400 text-xs">Annual Premium (incl. GST)</p>
               </div>
 
               {/* Payment Methods */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-700 mb-3">Select Payment Method</p>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Select Payment Method</p>
                 {PAYMENT_METHODS.map((method) => (
                   <button
                     key={method.id}
                     onClick={() => handleMethodSelect(method.id)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                    className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
                       selectedMethod === method.id
-                        ? "border-orange-500 bg-orange-50 ring-2 ring-orange-200"
+                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-200"
                         : method.color
                     }`}
                   >
-                    <span className="text-2xl">{method.icon}</span>
+                    <span className="text-xl">{method.icon}</span>
                     <div className="text-left flex-1">
-                      <p className="font-semibold text-gray-900">{method.name}</p>
+                      <p className="font-semibold text-gray-900 text-sm">{method.name}</p>
                       <p className="text-xs text-gray-500">{method.description}</p>
                     </div>
                     {selectedMethod === method.id && (
-                      <Check className="w-5 h-5 text-orange-500" />
+                      <Check className="w-4 h-4 text-orange-500" />
                     )}
                   </button>
                 ))}
@@ -159,7 +159,7 @@ const PaymentGateway = ({ sessionId, amount, onClose, onPaymentComplete }) => {
               <button
                 onClick={handleProceedToPayment}
                 disabled={!selectedMethod}
-                className={`w-full mt-6 py-4 rounded-xl font-semibold text-lg transition-all ${
+                className={`w-full mt-4 py-3 rounded-lg font-semibold transition-all ${
                   selectedMethod
                     ? "bg-orange-500 text-white hover:bg-orange-600"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -168,35 +168,35 @@ const PaymentGateway = ({ sessionId, amount, onClose, onPaymentComplete }) => {
                 Proceed to Pay
               </button>
 
-              <p className="text-center text-xs text-gray-400 mt-4">
+              <p className="text-center text-xs text-gray-400 mt-3">
                 🔒 Secure payment powered by Income Insurance
               </p>
             </>
           )}
 
           {step === "confirm" && (
-            <div className="text-center py-6">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">{selectedMethodData?.icon}</span>
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-3xl">{selectedMethodData?.icon}</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Payment</h3>
-              <p className="text-gray-500 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Payment</h3>
+              <p className="text-gray-500 text-sm mb-4">
                 You are about to pay <span className="font-bold text-gray-900">S${amount.toFixed(2)}</span> via{" "}
                 <span className="font-bold text-gray-900">{selectedMethodData?.name}</span>
               </p>
               
-              <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
-                <p className="text-xs text-gray-500 mb-2">DEMO MODE</p>
-                <p className="text-sm text-gray-600">
+              <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left">
+                <p className="text-xs text-gray-500 mb-1">DEMO MODE</p>
+                <p className="text-xs text-gray-600">
                   This is a demo payment. No actual charges will be made. 
                   Click "Confirm Payment" to simulate a successful payment.
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setStep("select")}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
