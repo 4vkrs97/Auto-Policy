@@ -1070,6 +1070,51 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "show_policy_popup": True
         }
     
+    # Customize coverage - show add-ons
+    if state.get("show_customize"):
+        # Singapore industry standard add-on pricing
+        engine_protection_price = 120.00
+        total_loss_price = 80.00
+        roadside_price = 45.00
+        
+        return {
+            "message": "🛡️ **Boost Your Coverage**\n\nEnhance your protection with these optional add-ons:",
+            "quick_replies": [
+                {"label": "✓ Apply Add-ons", "value": "apply_addons"},
+                {"label": "Skip Add-ons", "value": "skip_addons"}
+            ],
+            "next_agent": "pricing",
+            "data_collected": {},
+            "show_cards": True,
+            "cards": [{
+                "type": "coverage_addons",
+                "addons": [
+                    {
+                        "id": "engine_protection",
+                        "title": "🔧 Engine Protection",
+                        "description": "Save yourself from costly engine repairs. Covers engine and gearbox damage caused by floods, heavy rains, and oil/coolant leakage during accidents.",
+                        "price": engine_protection_price,
+                        "selected": state.get("addon_engine_protection", False)
+                    },
+                    {
+                        "id": "total_loss",
+                        "title": "📋 Full Total Loss Coverage",
+                        "description": "Ensure full coverage for total loss. Get the full market value of your vehicle with NCD protection included.",
+                        "price": total_loss_price,
+                        "selected": state.get("addon_total_loss", False)
+                    },
+                    {
+                        "id": "roadside",
+                        "title": "🚗 24/7 Roadside Assistance",
+                        "description": "Be prepared for roadside emergencies. Includes towing, battery jump-start, flat tyre change, and emergency fuel delivery.",
+                        "price": roadside_price,
+                        "selected": state.get("addon_roadside", False)
+                    }
+                ],
+                "current_premium": state.get("final_premium", 0) - state.get("addons_total", 0)
+            }]
+        }
+    
     # Documents ready - show policy document
     if state.get("documents_ready"):
         policy_num = state.get("policy_number", f"TRV-{datetime.now().year}-00000")
