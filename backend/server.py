@@ -1391,6 +1391,48 @@ async def generate_pdf_document(session_id: str):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
     ]))
     story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Exclusions section
+    story.append(Paragraph("Policy Exclusions", heading_style))
+    
+    exclusion_style = ParagraphStyle(
+        'ExclusionStyle',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#92400E'),
+        leftIndent=15,
+        spaceBefore=3,
+        spaceAfter=3
+    )
+    
+    exclusion_intro_style = ParagraphStyle(
+        'ExclusionIntro',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#78350F'),
+        spaceBefore=5,
+        spaceAfter=10
+    )
+    
+    story.append(Paragraph("This policy does not cover:", exclusion_intro_style))
+    
+    exclusions = [
+        "Driving under the influence of alcohol or drugs",
+        "Driving without a valid license",
+        "Use of vehicle for illegal purposes",
+        "Mechanical or electrical breakdown, wear and tear",
+        "Damage caused by war, terrorism, or nuclear risks",
+        "Consequential or indirect losses",
+        "Personal belongings left in the vehicle",
+        "Racing, speed testing, or rallies",
+        "Using vehicle for hire/reward (unless declared)",
+        "Damage while vehicle is used outside Singapore/West Malaysia"
+    ]
+    
+    for exclusion in exclusions:
+        story.append(Paragraph(f"• {exclusion}", exclusion_style))
+    
     story.append(Spacer(1, 30))
     
     # Footer
