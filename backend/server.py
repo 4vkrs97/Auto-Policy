@@ -120,7 +120,7 @@ VEHICLE_MODELS = {
 
 # Car brand logos (using reliable CDN sources)
 CAR_BRAND_LOGOS = {
-    "Toyota": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carance_logo.svg/200px-Toyota_carrance_logo.svg.png",
+    "Toyota": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Toyota.svg/200px-Toyota.svg.png",
     "Honda": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/200px-Honda.svg.png",
     "BMW": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/200px-BMW.svg.png",
     "Mercedes-Benz": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/200px-Mercedes-Logo.svg.png",
