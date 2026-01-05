@@ -593,8 +593,8 @@ export const ChatPage = () => {
 function getIconForReply(value) {
   const valueLower = value?.toLowerCase() || '';
   
-  if (valueLower.includes('car')) return Car;
-  if (valueLower.includes('motorcycle')) return Car;
+  // Skip icons for car/motorcycle as they already have emojis in labels
+  if (valueLower.includes('car') || valueLower.includes('motorcycle')) return null;
   if (valueLower.includes('comprehensive') || valueLower.includes('third')) return Shield;
   if (valueLower.includes('singpass') || valueLower.includes('manual') || valueLower.includes('consent')) return User;
   if (valueLower.includes('premium') || valueLower.includes('classic')) return Briefcase;
