@@ -111,7 +111,7 @@ export const PolicyCard = ({ card, onDownload }) => {
           data-testid="download-pdf-btn"
         >
           <Download className="w-4 h-4" />
-          Download Policy PDF
+          Download Policy Summary PDF
         </button>
       </div>
     </div>
