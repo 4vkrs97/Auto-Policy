@@ -701,8 +701,22 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             }]
         }
     
-    # Coverage selected, show plan options
+    # Coverage selected, show plan options (skip for motorcycles - auto-select Drive Classic)
     if state.get("coverage_type") and not state.get("plan_name"):
+        # For motorcycles, skip plan selection and auto-select Drive Classic
+        if state.get("vehicle_type") == "motorcycle":
+            return {
+                "message": "Great! I've selected the standard coverage plan for your motorcycle. Let me verify your identity now.",
+                "quick_replies": [
+                    {"label": "Continue", "value": "motorcycle_plan_continue"}
+                ],
+                "next_agent": "coverage",
+                "data_collected": {
+                    "plan_name": "Drive Classic"
+                }
+            }
+        
+        # For cars, show plan options
         coverage = state.get("coverage_type", "comprehensive").replace("_", " ").title()
         return {
             "message": f"Excellent choice! For {coverage} coverage, we have two plans. Drive Premium includes extra benefits like windscreen coverage and 24/7 roadside assistance.",
