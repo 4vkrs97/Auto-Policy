@@ -2082,8 +2082,9 @@ async def generate_pdf_document(session_id: str):
     story.append(Paragraph("Motor Insurance Policy Summary", styles['Heading2']))
     story.append(Spacer(1, 20))
     
-    # Policy details
-    policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
+    # Policy details - use MCI for motorcycle, AUT for car
+    default_prefix = "MCI" if state.get("vehicle_type") == "motorcycle" else "AUT"
+    policy_number = state.get("policy_number", f"{default_prefix}-{datetime.now().year}-{str(uuid.uuid4().int)[:5]}")
     
     story.append(Paragraph("Policy Details", heading_style))
     policy_data = [
