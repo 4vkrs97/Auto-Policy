@@ -134,7 +134,7 @@ CAR_BRAND_LOGOS = {
 
 # Motorcycle brand logos
 MOTORCYCLE_BRAND_LOGOS = {
-    "Yamaha": "https://brandslogos.com/wp-content/uploads/images/large/yamaha-motor-logo.png",
+    "Yamaha": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Yamaha_Motor_2025.svg/200px-Yamaha_Motor_2025.svg.png",
     "Kawasaki": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Kawasaki_motorcycles_logo.svg/200px-Kawasaki_motorcycles_logo.svg.png",
     "Suzuki": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2.svg/200px-Suzuki_logo_2.svg.png",
     "Ducati": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ducati_logo.svg/200px-Ducati_logo.svg.png",
