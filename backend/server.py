@@ -691,6 +691,16 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                     "environment": env_display
                 }
             
+            # Format motorcycle details if applicable
+            motorcycle_details = None
+            if vtype == "motorcycle":
+                type_map = {"ev": "Fully Electric (EV)", "hybrid": "Hybrid (Electric + Petrol)", "petrol": "Petrol-Powered"}
+                reg_map = {"ev": "Registered as EV", "petrol": "Registered as Petrol", "pending": "Registration Pending"}
+                motorcycle_details = {
+                    "motorcycle_type": type_map.get(state.get("motorcycle_type"), "N/A"),
+                    "registration": reg_map.get(state.get("motorcycle_registration"), "N/A")
+                }
+            
             return {
                 "message": f"Perfect! Here's a summary of your vehicle details:",
                 "quick_replies": [
@@ -707,7 +717,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                         "make": make,
                         "model": model,
                         "engine": engine,
-                        "usage": usage_details if vtype == "car" else None
+                        "usage": usage_details if vtype == "car" else None,
+                        "motorcycle_details": motorcycle_details
                     }
                 }]
             }
