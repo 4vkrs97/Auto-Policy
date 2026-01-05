@@ -2144,10 +2144,10 @@ async def process_payment(payment: PaymentRequest):
     # Generate payment reference
     payment_ref = f"PAY-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
     
-    # Generate policy number in format TRV-YYYY-XXXXX
+    # Generate policy number in format AUT-YYYY-XXXXX
     current_year = datetime.now().year
     sequence_num = str(uuid.uuid4().int)[:5]
-    policy_num = f"TRV-{current_year}-{sequence_num}"
+    policy_num = f"AUT-{current_year}-{sequence_num}"
     
     # Update session with payment info and policy number
     await db.sessions.update_one(
