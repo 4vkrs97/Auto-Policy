@@ -803,20 +803,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Telematics Question 2: Consent to use GPS/speed/braking data
-    if state.get("telematics_data_sharing") == "yes" and state.get("telematics_gps_consent") is None:
-        return {
-            "message": "**Do you consent to the use of GPS, speed, braking, and mileage data for pricing purposes?**",
-            "quick_replies": [
-                {"label": "✓ Yes, I consent", "value": "gps_consent_yes"},
-                {"label": "✗ No, I do not consent", "value": "gps_consent_no"}
-            ],
-            "next_agent": "telematics",
-            "data_collected": {}
-        }
-    
-    # Telematics Question 3: Safety feedback and alerts
-    if state.get("telematics_gps_consent") == "yes" and state.get("telematics_safety_alerts") is None:
+    # Telematics Question 2: Safety feedback and alerts (GPS consent removed)
+    if state.get("telematics_data_sharing") == "yes" and state.get("telematics_safety_alerts") is None:
         return {
             "message": "**Are you comfortable receiving driving safety feedback and alerts based on your driving data?**",
             "quick_replies": [
@@ -830,7 +818,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     # Telematics final opt-in (only if all consents given)
     if state.get("additional_drivers") and state.get("telematics_consent") is None:
         # Check if user declined at any point
-        if state.get("telematics_data_sharing") == "no" or state.get("telematics_gps_consent") == "no":
+        if state.get("telematics_data_sharing") == "no":
             # User declined, set telematics_consent to no and continue
             return {
                 "message": "No problem! You can still get a great quote without the Smart Driver programme. Let me calculate your premium.",
