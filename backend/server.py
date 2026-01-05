@@ -1593,15 +1593,7 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         state["telematics_data_sharing"] = "no"
         return state
     
-    # Telematics - Question 2: GPS/speed/braking consent
-    if input_lower in ["gps_consent_yes", "✓ yes, i consent", "yes, i consent"]:
-        state["telematics_gps_consent"] = "yes"
-        return state
-    if input_lower in ["gps_consent_no", "✗ no, i do not consent", "no, i do not consent"]:
-        state["telematics_gps_consent"] = "no"
-        return state
-    
-    # Telematics - Question 3: Safety alerts
+    # Telematics - Question 2: Safety alerts (GPS consent removed)
     if input_lower in ["safety_alerts_yes", "✓ yes, i am comfortable", "yes, i am comfortable"]:
         state["telematics_safety_alerts"] = "yes"
         return state
