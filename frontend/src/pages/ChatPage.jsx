@@ -212,16 +212,18 @@ export const ChatPage = () => {
       return; // Don't send to backend, just toggle locally
     }
     
-    // Handle "Done Selecting" for multi-select - send all selections then done
+    // Handle "Done Selecting" for multi-select - send all selections in one request
     if (value === "env_done") {
-      // Send each selection to backend sequentially
-      for (const choice of multiSelectChoices) {
-        await sendMessage(choice, choice);
+      if (multiSelectChoices.length > 0) {
+        // Send all selections as comma-separated string
+        const selectionsString = multiSelectChoices.join(",");
+        await sendMessage(selectionsString, selectionsString);
+      } else {
+        // No selections, just send done to use default (all options)
+        sendMessage(label, value);
       }
       // Clear multi-select state
       setMultiSelectChoices([]);
-      // Then send the done signal
-      sendMessage(label, value);
       return;
     }
     
