@@ -1207,7 +1207,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     
     # Documents ready - show policy document
     if state.get("documents_ready"):
-        policy_num = state.get("policy_number", f"AUT-{datetime.now().year}-00000")
+        default_prefix = "MCI" if state.get("vehicle_type") == "motorcycle" else "AUT"
+        policy_num = state.get("policy_number", f"{default_prefix}-{datetime.now().year}-00000")
         now = datetime.now()
         start_date = now.strftime("%d %b %Y")
         end_date = (now.replace(year=now.year + 1)).strftime("%d %b %Y")
