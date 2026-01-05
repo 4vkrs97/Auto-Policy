@@ -600,27 +600,15 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         }
     
     # Step 5e: Ask about typical driving environment (multi-select)
+    # Note: Multi-select is handled entirely on frontend - backend just asks the question once
     if state.get("driving_time") and state.get("driving_environment") is None:
-        # Get current selections
-        current_selections = state.get("driving_environment_selections", [])
-        
-        # Build the message showing current selections
-        if current_selections:
-            selected_names = []
-            name_map = {"urban_city": "Urban/City", "suburban": "Suburban", "rural_highways": "Rural/Highways"}
-            for sel in current_selections:
-                selected_names.append(name_map.get(sel, sel))
-            selection_text = f"\n\n**Currently selected:** {', '.join(selected_names)}"
-        else:
-            selection_text = ""
-        
         return {
-            "message": f"**Where do you mainly drive your vehicle?**\n\n*Select all that apply, then click Done:*{selection_text}",
+            "message": "**Where do you mainly drive your vehicle?**\n\n*Select all that apply, then click Done:*",
             "quick_replies": [
-                {"label": "🏙️ Urban / City Roads", "value": "env_urban_city", "selected": "urban_city" in current_selections},
-                {"label": "🏘️ Suburban / Light Traffic", "value": "env_suburban", "selected": "suburban" in current_selections},
-                {"label": "🛣️ Rural / Highways", "value": "env_rural_highways", "selected": "rural_highways" in current_selections},
-                {"label": f"✓ Done Selecting ({len(current_selections)} selected)", "value": "env_done"}
+                {"label": "🏙️ Urban / City Roads", "value": "env_urban_city"},
+                {"label": "🏘️ Suburban / Light Traffic", "value": "env_suburban"},
+                {"label": "🛣️ Rural / Highways", "value": "env_rural_highways"},
+                {"label": "✓ Done Selecting", "value": "env_done"}
             ],
             "next_agent": "intake",
             "data_collected": {},
