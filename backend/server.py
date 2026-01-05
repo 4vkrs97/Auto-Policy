@@ -708,14 +708,15 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     
     # Coverage selected, show plan options (skip for motorcycles - auto-select Drive Classic)
     if state.get("coverage_type") and not state.get("plan_name"):
-        # For motorcycles, skip plan selection and auto-select Drive Classic
+        # For motorcycles, skip plan selection - auto-select Drive Classic and go directly to identity verification
         if state.get("vehicle_type") == "motorcycle":
             return {
-                "message": "Great! I've selected the standard coverage plan for your motorcycle. Let me verify your identity now.",
+                "message": "Great choice! Now I need to verify your identity and driving credentials. Would you like to retrieve your details via Singpass? It's faster and more secure!",
                 "quick_replies": [
-                    {"label": "Continue", "value": "motorcycle_plan_continue"}
+                    {"label": "🔐 Use Singpass", "value": "singpass"},
+                    {"label": "Enter Manually", "value": "manual"}
                 ],
-                "next_agent": "coverage",
+                "next_agent": "driver_identity",
                 "data_collected": {
                     "plan_name": "Drive Classic"
                 }
