@@ -69,6 +69,7 @@ class Message(BaseModel):
     quick_replies: Optional[List[Dict[str, Any]]] = None
     cards: Optional[List[Dict[str, Any]]] = None
     show_brand_logos: Optional[bool] = None
+    multi_select: Optional[bool] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class QuoteRequest(BaseModel):
