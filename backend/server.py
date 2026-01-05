@@ -1190,7 +1190,6 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {
                 "change_telematics": False,
                 "telematics_data_sharing": None,
-                "telematics_gps_consent": None,
                 "telematics_safety_alerts": None,
                 "telematics_consent": None,
                 "risk_assessed": None,
