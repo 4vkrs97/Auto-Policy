@@ -46,6 +46,7 @@ export const ChatPage = () => {
   const [showPaymentGateway, setShowPaymentGateway] = useState(false);
   const [showPolicyPopup, setShowPolicyPopup] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [multiSelectChoices, setMultiSelectChoices] = useState([]);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const messagesContainerRef = useRef(null);
