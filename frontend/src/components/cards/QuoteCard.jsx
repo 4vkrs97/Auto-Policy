@@ -1,4 +1,4 @@
-import { Shield, Car, CheckCircle } from "lucide-react";
+import { Shield, Car, CheckCircle, User } from "lucide-react";
 
 export const QuoteCard = ({ card }) => {
   return (
@@ -12,6 +12,15 @@ export const QuoteCard = ({ card }) => {
           <p className="text-sm text-white/80">{card.coverage_type}</p>
         </div>
       </div>
+
+      {/* Policyholder Name */}
+      {card.policyholder_name && (
+        <div className="flex items-center gap-2 mb-3 text-sm text-white/90 bg-white/10 rounded-lg px-3 py-2">
+          <User className="w-4 h-4" />
+          <span className="text-white/70">Policyholder:</span>
+          <span className="font-semibold">{card.policyholder_name}</span>
+        </div>
+      )}
 
       {card.vehicle && (
         <div className="flex items-center gap-2 mb-4 text-sm text-white/80">
