@@ -2285,13 +2285,17 @@ async def process_payment(payment: PaymentRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
+    state = session.get("state", {})
+    
     # Generate payment reference
     payment_ref = f"PAY-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
     
-    # Generate policy number in format AUT-YYYY-XXXXX
+    # Generate policy number based on vehicle type
+    # Format: MCI-YYYY-XXXXX for motorcycles, AUT-YYYY-XXXXX for cars
     current_year = datetime.now().year
     sequence_num = str(uuid.uuid4().int)[:5]
-    policy_num = f"AUT-{current_year}-{sequence_num}"
+    prefix = "MCI" if state.get("vehicle_type") == "motorcycle" else "AUT"
+    policy_num = f"{prefix}-{current_year}-{sequence_num}"
     
     # Update session with payment info and policy number
     await db.sessions.update_one(
