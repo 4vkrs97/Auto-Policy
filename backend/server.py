@@ -683,6 +683,11 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     
     # Vehicle confirmed, show coverage options
     if state.get("vehicle_confirmed") and not state.get("coverage_type"):
+        # Set prices based on vehicle type
+        is_motorcycle = state.get("vehicle_type") == "motorcycle"
+        comprehensive_price = "From $750/year" if is_motorcycle else "From $1,200/year"
+        third_party_price = "From $500/year" if is_motorcycle else "From $800/year"
+        
         return {
             "message": "Perfect! Now let's choose the right coverage for you. I recommend Comprehensive coverage for maximum protection.",
             "quick_replies": [
@@ -695,8 +700,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "cards": [{
                 "type": "coverage_comparison",
                 "plans": [
-                    {"name": "Comprehensive", "price": "From $1,200/year", "features": ["Own damage coverage", "Theft protection", "Third party liability", "Personal accident cover", "Natural disaster coverage"], "recommended": True},
-                    {"name": "Third Party", "price": "From $800/year", "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]}
+                    {"name": "Comprehensive", "price": comprehensive_price, "features": ["Own damage coverage", "Theft protection", "Third party liability", "Personal accident cover", "Natural disaster coverage"], "recommended": True},
+                    {"name": "Third Party", "price": third_party_price, "features": ["Third party liability", "Personal accident cover", "Legal costs coverage"]}
                 ]
             }]
         }
