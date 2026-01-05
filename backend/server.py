@@ -2227,7 +2227,8 @@ async def generate_html_document(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
     
     state = session.get("state", {})
-    policy_number = state.get("policy_number", f"INC-2024-{str(uuid.uuid4())[:8].upper()}")
+    default_prefix = "MCI" if state.get("vehicle_type") == "motorcycle" else "AUT"
+    policy_number = state.get("policy_number", f"{default_prefix}-{datetime.now().year}-{str(uuid.uuid4().int)[:5]}")
     
     return {
         "policy_number": policy_number,
