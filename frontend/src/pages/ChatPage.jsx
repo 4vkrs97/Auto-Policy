@@ -192,13 +192,36 @@ export const ChatPage = () => {
     }
   };
 
-  const handleQuickReply = (value, label) => {
+  const handleQuickReply = (value, label, isMultiSelect = false) => {
     // Check if this is a payment gateway trigger
     if (value === "proceed_to_payment" || value === "open_payment_gateway") {
       setPaymentAmount(session?.state?.final_premium || 0);
       setShowPaymentGateway(true);
       return;
     }
+    
+    // Handle multi-select checkbox toggle
+    if (isMultiSelect && value !== "env_done") {
+      setMultiSelectChoices(prev => {
+        if (prev.includes(value)) {
+          return prev.filter(v => v !== value);
+        } else {
+          return [...prev, value];
+        }
+      });
+      return;
+    }
+    
+    // Handle "Done Selecting" for multi-select - send all selections first
+    if (value === "env_done" && multiSelectChoices.length > 0) {
+      // Send each selection to backend
+      multiSelectChoices.forEach(choice => {
+        sendMessage(choice, choice);
+      });
+      // Clear multi-select state
+      setMultiSelectChoices([]);
+    }
+    
     sendMessage(label, value);
   };
 
