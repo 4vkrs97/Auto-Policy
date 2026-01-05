@@ -497,7 +497,7 @@ export const ChatPage = () => {
                                 </>
                               ) : (
                                 <>
-                                  <IconComponent className="w-4 h-4" />
+                                  {IconComponent && <IconComponent className="w-4 h-4" />}
                                   {reply.label}
                                 </>
                               )}
