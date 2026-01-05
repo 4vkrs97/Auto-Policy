@@ -192,7 +192,7 @@ export const ChatPage = () => {
     }
   };
 
-  const handleQuickReply = (value, label, isMultiSelect = false) => {
+  const handleQuickReply = async (value, label, isMultiSelect = false) => {
     // Check if this is a payment gateway trigger
     if (value === "proceed_to_payment" || value === "open_payment_gateway") {
       setPaymentAmount(session?.state?.final_premium || 0);
@@ -200,7 +200,7 @@ export const ChatPage = () => {
       return;
     }
     
-    // Handle multi-select checkbox toggle
+    // Handle multi-select checkbox toggle (don't send to backend yet)
     if (isMultiSelect && value !== "env_done") {
       setMultiSelectChoices(prev => {
         if (prev.includes(value)) {
@@ -209,17 +209,20 @@ export const ChatPage = () => {
           return [...prev, value];
         }
       });
-      return;
+      return; // Don't send to backend, just toggle locally
     }
     
-    // Handle "Done Selecting" for multi-select - send all selections first
-    if (value === "env_done" && multiSelectChoices.length > 0) {
-      // Send each selection to backend
-      multiSelectChoices.forEach(choice => {
-        sendMessage(choice, choice);
-      });
+    // Handle "Done Selecting" for multi-select - send all selections then done
+    if (value === "env_done") {
+      // Send each selection to backend sequentially
+      for (const choice of multiSelectChoices) {
+        await sendMessage(choice, choice);
+      }
       // Clear multi-select state
       setMultiSelectChoices([]);
+      // Then send the done signal
+      sendMessage(label, value);
+      return;
     }
     
     sendMessage(label, value);
