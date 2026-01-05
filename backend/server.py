@@ -631,12 +631,19 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 time_map = {"peak_hours": "Peak Hours", "off_peak_hours": "Off-Peak Hours", "mixed_hours": "Mixed"}
                 env_map = {"urban_city": "Urban/City", "suburban": "Suburban", "rural_highways": "Rural/Highways"}
                 
+                # Format driving environment (can be list or string)
+                driving_env = state.get("driving_environment", [])
+                if isinstance(driving_env, list):
+                    env_display = ", ".join([env_map.get(e, e) for e in driving_env]) if driving_env else "N/A"
+                else:
+                    env_display = env_map.get(driving_env, "N/A")
+                
                 usage_details = {
                     "purpose": purpose_map.get(state.get("vehicle_purpose"), "N/A"),
                     "frequency": freq_map.get(state.get("usage_frequency"), "N/A"),
                     "distance": distance_map.get(state.get("monthly_distance"), "N/A"),
                     "driving_time": time_map.get(state.get("driving_time"), "N/A"),
-                    "environment": env_map.get(state.get("driving_environment"), "N/A")
+                    "environment": env_display
                 }
             
             return {
