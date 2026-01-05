@@ -627,10 +627,41 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "multi_select": True
         }
     
-    # Step 6: Show vehicle summary and move to coverage
+    # Step 6: For motorcycles, ask about motorcycle type (EV/Hybrid/Petrol)
+    if state.get("vehicle_type") == "motorcycle" and state.get("engine_capacity") and state.get("motorcycle_type") is None:
+        return {
+            "message": "**What type of motorcycle are you insuring under this new policy?**",
+            "quick_replies": [
+                {"label": "⚡ Fully Electric Motorcycle (EV)", "value": "motorcycle_ev"},
+                {"label": "🔋 Hybrid Motorcycle (Electric + Petrol)", "value": "motorcycle_hybrid"},
+                {"label": "⛽ Petrol-Powered Motorcycle", "value": "motorcycle_petrol"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 7: For motorcycles, ask about LTA registration
+    if state.get("vehicle_type") == "motorcycle" and state.get("motorcycle_type") and state.get("motorcycle_registration") is None:
+        return {
+            "message": "**How is the motorcycle registered with Singapore LTA?**",
+            "quick_replies": [
+                {"label": "⚡ Registered as Electric Vehicle (EV)", "value": "reg_ev"},
+                {"label": "⛽ Registered as Petrol Motorcycle", "value": "reg_petrol"},
+                {"label": "⏳ Registration Pending", "value": "reg_pending"}
+            ],
+            "next_agent": "intake",
+            "data_collected": {}
+        }
+    
+    # Step 8: Show vehicle summary and move to coverage
     if state.get("engine_capacity") and not state.get("vehicle_confirmed"):
         vtype = state.get("vehicle_type", "car")
-        # For cars, need all usage questions answered; for motorcycles, skip usage questions
+        # For cars, need all usage questions answered; for motorcycles, need motorcycle questions answered
+        if vtype == "motorcycle":
+            # Check if motorcycle questions are answered
+            if state.get("motorcycle_registration") is None:
+                return None  # Will be handled by the motorcycle questions above
+        
         if vtype == "motorcycle" or state.get("driving_environment") is not None:
             make = state.get("vehicle_make", "")
             model = state.get("vehicle_model", "")
