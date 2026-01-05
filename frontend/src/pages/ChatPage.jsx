@@ -423,7 +423,7 @@ export const ChatPage = () => {
                   Type: Income Motor Insurance - {session?.state?.plan_name || 'Quote in Progress'}
                 </span>
                 <span className={`policy-status ${session?.state?.documents_ready ? 'active' : ''}`}>
-                  Status: {session?.state?.documents_ready ? 'ACTIVE' : 'IN PROGRESS'}
+                  Status: {session?.state?.documents_ready ? 'Active' : 'In Progress'}
                 </span>
               </div>
               
