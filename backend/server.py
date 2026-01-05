@@ -1230,7 +1230,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "end_date": end_date,
                 "driver_name": state.get("driver_name", "Tan Ah Kow"),
                 "ncd_percentage": f"{state.get('ncd_percent', 0)}%",
-                "payment_reference": state.get("payment_reference", "")
+                "payment_reference": state.get("payment_reference", ""),
+                "green_vehicle_discount": state.get("green_vehicle_discount", 0)
             }]
         }
     
