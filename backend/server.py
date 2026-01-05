@@ -1604,6 +1604,11 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
         state["plan_name"] = "Drive Premium" if "premium" in input_lower else "Drive Classic"
         return state
     
+    # Motorcycle plan continue (auto-selected Drive Classic)
+    if input_lower in ["motorcycle_plan_continue", "continue"] and state.get("vehicle_type") == "motorcycle" and state.get("coverage_type") and not state.get("plan_name"):
+        state["plan_name"] = "Drive Classic"
+        return state
+    
     # Driver info method
     if input_lower in ["singpass", "use singpass", "🔐 use singpass", "manual", "enter manually"]:
         state["driver_info_method"] = "singpass" if "singpass" in input_lower else "manual"
