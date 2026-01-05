@@ -920,11 +920,11 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         if coverage_type == "third_party":
             base = 800  # Base for Third Party car
             if state.get("vehicle_type") == "motorcycle":
-                base = 400
+                base = 500  # Third Party motorcycle
         else:
             base = 1200  # Base for Comprehensive car
             if state.get("vehicle_type") == "motorcycle":
-                base = 600
+                base = 750  # Comprehensive motorcycle
         
         engine = state.get("engine_capacity", "2000cc")
         if "2001" in engine or "3000" in engine:
