@@ -1,4 +1,4 @@
-import { FileText, Download, Calendar, User, Car, Shield, AlertTriangle } from "lucide-react";
+import { FileText, Download, Calendar, User, Car, Shield, AlertTriangle, Leaf } from "lucide-react";
 
 // Standard motor insurance exclusions for Singapore
 const POLICY_EXCLUSIONS = [
@@ -77,6 +77,12 @@ export const PolicyCard = ({ card, onDownload }) => {
             {card.ncd_percentage && card.ncd_percentage !== "0%" && (
               <p className="text-xs text-gray-400 mt-1">
                 NCD Applied: {card.ncd_percentage}
+              </p>
+            )}
+            {card.green_vehicle_discount > 0 && (
+              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <Leaf className="w-3 h-3" />
+                Green Vehicle Discount: 5% (-${card.green_vehicle_discount})
               </p>
             )}
           </div>
