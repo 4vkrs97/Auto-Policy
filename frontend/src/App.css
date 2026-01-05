@@ -409,25 +409,70 @@
     max-width: 400px;
 }
 
-/* Coverage comparison cards */
+/* Coverage comparison cards - Side by side grid */
+.coverage-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+    .coverage-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .coverage-card {
     background: white;
-    border: 1px solid #E5E7EB;
+    border: 2px solid #E5E7EB;
     border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 8px;
+    padding: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .coverage-card:hover {
     border-color: #F96302;
-    box-shadow: 0 4px 12px rgba(249, 99, 2, 0.1);
+    box-shadow: 0 4px 12px rgba(249, 99, 2, 0.15);
+    transform: translateY(-2px);
 }
 
 .coverage-card.recommended {
     border: 2px solid #F96302;
+    background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+    box-shadow: 0 4px 16px rgba(249, 99, 2, 0.2);
+}
+
+.coverage-select-btn {
+    width: 100%;
+    text-align: center;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: #F96302;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.coverage-select-btn:hover {
     background: #FFF7ED;
+}
+
+.coverage-card.recommended .coverage-select-btn {
+    background: #F96302;
+    color: white;
+    border-radius: 8px;
+}
+
+.coverage-card.recommended .coverage-select-btn:hover {
+    background: #E55A00;
 }
 
 /* Quote summary card */
