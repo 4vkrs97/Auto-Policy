@@ -4,7 +4,7 @@ export const CoverageCard = ({ card, onSelect }) => {
   const plans = card.plans || [];
 
   return (
-    <div className="space-y-3" data-testid="coverage-card">
+    <div className="coverage-cards-grid" data-testid="coverage-card">
       {plans.map((plan, index) => (
         <div
           key={index}
@@ -37,7 +37,7 @@ export const CoverageCard = ({ card, onSelect }) => {
             </div>
           </div>
           
-          <ul className="space-y-2">
+          <ul className="space-y-2 flex-1">
             {plan.features.map((feature, fIndex) => (
               <li key={fIndex} className="flex items-start gap-2 text-sm text-[#6B7280]">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
@@ -47,9 +47,9 @@ export const CoverageCard = ({ card, onSelect }) => {
           </ul>
           
           <div className="mt-4 pt-3 border-t border-gray-100">
-            <span className="text-sm text-[#F96302] font-medium cursor-pointer hover:underline">
+            <button className="coverage-select-btn">
               Select this plan →
-            </span>
+            </button>
           </div>
         </div>
       ))}
