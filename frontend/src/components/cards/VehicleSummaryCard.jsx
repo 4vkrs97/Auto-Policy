@@ -1,4 +1,4 @@
-import { Car, CheckCircle, Briefcase, Calendar, MapPin, Clock, Route } from "lucide-react";
+import { Car, CheckCircle, Briefcase, Calendar, MapPin, Clock, Route, Zap, FileText } from "lucide-react";
 
 export const VehicleSummaryCard = ({ data }) => {
   const items = [
@@ -17,6 +17,15 @@ export const VehicleSummaryCard = ({ data }) => {
       { label: "Monthly Distance", value: data.usage.distance || "—", icon: Route },
       { label: "Usual Driving Time", value: data.usage.driving_time || "—", icon: Clock },
       { label: "Driving Environment", value: data.usage.environment || "—", icon: MapPin }
+    );
+  }
+
+  // Add motorcycle details
+  const motorcycleItems = [];
+  if (data?.type?.toLowerCase() === "motorcycle" && data?.motorcycle_details) {
+    motorcycleItems.push(
+      { label: "Motorcycle Type", value: data.motorcycle_details.motorcycle_type || "—", icon: Zap },
+      { label: "LTA Registration", value: data.motorcycle_details.registration || "—", icon: FileText }
     );
   }
 
@@ -45,6 +54,32 @@ export const VehicleSummaryCard = ({ data }) => {
             </div>
           </div>
         ))}
+        
+        {/* Motorcycle Details Section */}
+        {motorcycleItems.length > 0 && (
+          <>
+            <div className="border-t border-gray-200 my-3"></div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Motorcycle Details</p>
+            {motorcycleItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div 
+                  key={item.label}
+                  className="fetch-row complete"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-600">{item.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">{item.value}</span>
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
         
         {/* Usage Details Section for Cars */}
         {usageItems.length > 0 && (
