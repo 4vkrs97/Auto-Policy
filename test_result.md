@@ -288,7 +288,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Payment Processing feature - GET /api/payment/methods and POST /api/payment/process"
+    - "Driving Environment Multi-Select - support multi-select checkboxes for driving environment"
+    - "GPS Consent Question Removed - remove GPS consent from telematics flow"
+    - "Payment Processing Verification - verify payment endpoints still work after changes"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
