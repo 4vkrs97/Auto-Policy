@@ -999,9 +999,17 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         ncd_percent = state.get("ncd_percent", 0)
         telematics_percent = 15 if state.get("telematics_consent") == "yes" else 0
         
+        # Green Vehicle Discount (5%) for fully electric motorcycles registered as EV
+        green_vehicle_percent = 0
+        if (state.get("vehicle_type") == "motorcycle" and 
+            state.get("motorcycle_type") == "ev" and 
+            state.get("motorcycle_registration") == "ev"):
+            green_vehicle_percent = 5
+        
         gross = base * plan_mult
         ncd_discount = gross * (ncd_percent / 100)
         telematics_discount = gross * (telematics_percent / 100)
+        green_vehicle_discount = gross * (green_vehicle_percent / 100)
         
         # Calculate add-ons if any
         addon_engine = state.get("addon_engine_protection", False)
@@ -1021,7 +1029,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         if addon_roadside:
             addons_total += roadside_price
         
-        final = gross - ncd_discount - telematics_discount + addons_total
+        final = gross - ncd_discount - telematics_discount - green_vehicle_discount + addons_total
         
         # Calculate plan loading amount
         plan_loading = base * (plan_mult - 1) if plan_mult > 1 else 0
@@ -1041,6 +1049,9 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
         
         if telematics_discount > 0:
             breakdown.append({"item": f"Smart Driver Discount ({telematics_percent}%)", "amount": f"-${round(telematics_discount, 2)}"})
+        
+        if green_vehicle_discount > 0:
+            breakdown.append({"item": f"🌿 Green Vehicle Discount ({green_vehicle_percent}%)", "amount": f"-${round(green_vehicle_discount, 2)}"})
         
         # Add add-ons to breakdown if selected
         if addon_engine:
@@ -1065,6 +1076,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "gross_premium": round(gross, 2),
                 "ncd_discount": round(ncd_discount, 2),
                 "telematics_discount": round(telematics_discount, 2),
+                "green_vehicle_discount": round(green_vehicle_discount, 2),
                 "addons_total": round(addons_total, 2),
                 "final_premium": round(final, 2)
             },
@@ -1077,7 +1089,8 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "policyholder_name": state.get("driver_name", "Tan Ah Kow"),
                 "premium": f"${round(final, 2)}/year",
                 "breakdown": breakdown,
-                "has_addons": addons_total > 0
+                "has_addons": addons_total > 0,
+                "green_vehicle_discount": round(green_vehicle_discount, 2) if green_vehicle_discount > 0 else None
             }]
         }
     
