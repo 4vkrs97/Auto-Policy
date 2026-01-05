@@ -489,45 +489,82 @@ export const ChatPage = () => {
                    message.quick_replies.length > 0 &&
                    !isTyping && (
                     <div className="ml-[52px] mt-3">
-                      <div className={message.show_brand_logos ? "brand-buttons-grid" : "action-buttons-grid"}>
-                        {message.quick_replies.map((reply, idx) => {
-                          const IconComponent = getIconForReply(reply.value);
-                          const hasLogo = reply.logo && message.show_brand_logos;
-                          
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => handleQuickReply(reply.value, reply.label)}
-                              className={hasLogo ? "brand-button" : "action-button"}
-                              data-testid={`quick-reply-${idx}`}
-                            >
-                              {hasLogo ? (
-                                <>
-                                  <div className="brand-logo-container">
-                                    <img 
-                                      src={reply.logo} 
-                                      alt={reply.label} 
-                                      className="brand-logo"
-                                      onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'flex';
-                                      }}
-                                    />
-                                    <div className="brand-logo-fallback" style={{display: 'none'}}>
-                                      {reply.label.charAt(0)}
-                                    </div>
+                      {message.multi_select ? (
+                        /* Multi-select checkboxes mode */
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {message.quick_replies.filter(r => r.value !== "env_done").map((reply, idx) => {
+                              const isSelected = multiSelectChoices.includes(reply.value);
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleQuickReply(reply.value, reply.label, true)}
+                                  className={`action-button ${isSelected ? 'bg-orange-100 border-orange-500 text-orange-700' : ''}`}
+                                  data-testid={`quick-reply-${idx}`}
+                                >
+                                  <div className={`w-4 h-4 border rounded mr-2 flex items-center justify-center ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-400'}`}>
+                                    {isSelected && <Check className="w-3 h-3 text-white" />}
                                   </div>
-                                  <span className="brand-name">{reply.label}</span>
-                                </>
-                              ) : (
-                                <>
-                                  {IconComponent && <IconComponent className="w-4 h-4" />}
                                   {reply.label}
-                                </>
-                              )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {/* Done button */}
+                          {message.quick_replies.find(r => r.value === "env_done") && (
+                            <button
+                              onClick={() => handleQuickReply("env_done", "✓ Done Selecting", false)}
+                              className="action-button bg-orange-500 text-white hover:bg-orange-600"
+                              data-testid="quick-reply-done"
+                            >
+                              <Check className="w-4 h-4" />
+                              Done Selecting ({multiSelectChoices.length} selected)
                             </button>
-                          );
-                        })}
+                          )}
+                        </div>
+                      ) : (
+                        /* Regular buttons mode */
+                        <div className={message.show_brand_logos ? "brand-buttons-grid" : "action-buttons-grid"}>
+                          {message.quick_replies.map((reply, idx) => {
+                            const IconComponent = getIconForReply(reply.value);
+                            const hasLogo = reply.logo && message.show_brand_logos;
+                            
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => handleQuickReply(reply.value, reply.label)}
+                                className={hasLogo ? "brand-button" : "action-button"}
+                                data-testid={`quick-reply-${idx}`}
+                              >
+                                {hasLogo ? (
+                                  <>
+                                    <div className="brand-logo-container">
+                                      <img 
+                                        src={reply.logo} 
+                                        alt={reply.label} 
+                                        className="brand-logo"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                          e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                      />
+                                      <div className="brand-logo-fallback" style={{display: 'none'}}>
+                                        {reply.label.charAt(0)}
+                                      </div>
+                                    </div>
+                                    <span className="brand-name">{reply.label}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    {IconComponent && <IconComponent className="w-4 h-4" />}
+                                    {reply.label}
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       </div>
                     </div>
                   )}
