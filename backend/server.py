@@ -1527,16 +1527,32 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
             state["driving_time"] = "mixed_hours"
             return state
     
-    # Driving environment
+    # Driving environment (multi-select)
     if state.get("driving_time") and state.get("driving_environment") is None:
-        if input_lower in ["urban_city", "🏙️ urban / city roads", "urban / city roads", "urban", "city"]:
-            state["driving_environment"] = "urban_city"
+        # Initialize driving_environment_selections if not exists
+        if "driving_environment_selections" not in state:
+            state["driving_environment_selections"] = []
+        
+        # Check for environment selections
+        if input_lower in ["env_urban_city", "🏙️ urban / city roads", "urban / city roads", "urban", "city"]:
+            if "urban_city" not in state["driving_environment_selections"]:
+                state["driving_environment_selections"].append("urban_city")
             return state
-        elif input_lower in ["suburban", "🏘️ suburban / light traffic", "suburban / light traffic"]:
-            state["driving_environment"] = "suburban"
+        elif input_lower in ["env_suburban", "🏘️ suburban / light traffic", "suburban / light traffic"]:
+            if "suburban" not in state["driving_environment_selections"]:
+                state["driving_environment_selections"].append("suburban")
             return state
-        elif input_lower in ["rural_highways", "🛣️ rural / highways", "rural / highways", "rural", "highways"]:
-            state["driving_environment"] = "rural_highways"
+        elif input_lower in ["env_rural_highways", "🛣️ rural / highways", "rural / highways", "rural", "highways"]:
+            if "rural_highways" not in state["driving_environment_selections"]:
+                state["driving_environment_selections"].append("rural_highways")
+            return state
+        elif input_lower in ["env_done", "✓ done selecting", "done selecting", "done"]:
+            # Finalize selections - if none selected, default to all
+            selections = state.get("driving_environment_selections", [])
+            if selections:
+                state["driving_environment"] = selections
+            else:
+                state["driving_environment"] = ["urban_city", "suburban", "rural_highways"]
             return state
     
     # Confirm vehicle
