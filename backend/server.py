@@ -1528,6 +1528,30 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
                     state["engine_capacity"] = cap
                     return state
     
+    # Motorcycle type question (EV/Hybrid/Petrol)
+    if state.get("vehicle_type") == "motorcycle" and state.get("engine_capacity") and state.get("motorcycle_type") is None:
+        if input_lower in ["motorcycle_ev", "⚡ fully electric motorcycle (ev)", "fully electric motorcycle", "ev", "electric"]:
+            state["motorcycle_type"] = "ev"
+            return state
+        elif input_lower in ["motorcycle_hybrid", "🔋 hybrid motorcycle (electric + petrol)", "hybrid motorcycle", "hybrid"]:
+            state["motorcycle_type"] = "hybrid"
+            return state
+        elif input_lower in ["motorcycle_petrol", "⛽ petrol-powered motorcycle", "petrol-powered motorcycle", "petrol"]:
+            state["motorcycle_type"] = "petrol"
+            return state
+    
+    # Motorcycle LTA registration question
+    if state.get("vehicle_type") == "motorcycle" and state.get("motorcycle_type") and state.get("motorcycle_registration") is None:
+        if input_lower in ["reg_ev", "⚡ registered as electric vehicle (ev)", "registered as electric vehicle", "registered ev"]:
+            state["motorcycle_registration"] = "ev"
+            return state
+        elif input_lower in ["reg_petrol", "⛽ registered as petrol motorcycle", "registered as petrol motorcycle", "registered petrol"]:
+            state["motorcycle_registration"] = "petrol"
+            return state
+        elif input_lower in ["reg_pending", "⏳ registration pending", "registration pending", "pending"]:
+            state["motorcycle_registration"] = "pending"
+            return state
+    
     # Vehicle usage questions (for cars only)
     # Primary purpose
     if state.get("engine_capacity") and state.get("vehicle_type") == "car" and state.get("vehicle_purpose") is None:
