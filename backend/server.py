@@ -598,17 +598,19 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
             "data_collected": {}
         }
     
-    # Step 5e: Ask about typical driving environment
+    # Step 5e: Ask about typical driving environment (multi-select)
     if state.get("driving_time") and state.get("driving_environment") is None:
         return {
-            "message": "**Where do you mainly drive your vehicle?**",
+            "message": "**Where do you mainly drive your vehicle?**\n\n*Select all that apply:*",
             "quick_replies": [
-                {"label": "🏙️ Urban / City Roads", "value": "urban_city"},
-                {"label": "🏘️ Suburban / Light Traffic", "value": "suburban"},
-                {"label": "🛣️ Rural / Highways", "value": "rural_highways"}
+                {"label": "🏙️ Urban / City Roads", "value": "env_urban_city"},
+                {"label": "🏘️ Suburban / Light Traffic", "value": "env_suburban"},
+                {"label": "🛣️ Rural / Highways", "value": "env_rural_highways"},
+                {"label": "✓ Done Selecting", "value": "env_done"}
             ],
             "next_agent": "intake",
-            "data_collected": {}
+            "data_collected": {},
+            "multi_select": True
         }
     
     # Step 6: Show vehicle summary and move to coverage
