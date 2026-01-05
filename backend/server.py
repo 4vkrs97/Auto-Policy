@@ -1001,6 +1001,7 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
                 "plan_name": state.get("plan_name", "Drive Classic"),
                 "coverage_type": coverage_type.replace("_", " ").title(),
                 "vehicle": f"{state.get('vehicle_make', 'Toyota')} {state.get('vehicle_model', 'Camry')}",
+                "policyholder_name": state.get("driver_name", "Tan Ah Kow"),
                 "premium": f"${round(final, 2)}/year",
                 "breakdown": breakdown,
                 "has_addons": addons_total > 0
