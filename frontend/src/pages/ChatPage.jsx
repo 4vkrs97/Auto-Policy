@@ -496,36 +496,47 @@ export const ChatPage = () => {
                     <div className="ml-[52px] mt-3">
                       {message.multi_select ? (
                         /* Multi-select checkboxes mode */
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-2">
+                        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                          <p className="text-sm text-gray-600 mb-3">Select all that apply:</p>
+                          <div className="space-y-2 mb-4">
                             {message.quick_replies.filter(r => r.value !== "env_done").map((reply, idx) => {
-                              const isSelected = multiSelectChoices.includes(reply.value);
+                              const isSelected = multiSelectChoices.includes(reply.value) || reply.selected;
                               return (
                                 <button
                                   key={idx}
                                   onClick={() => handleQuickReply(reply.value, reply.label, true)}
-                                  className={`action-button ${isSelected ? 'bg-orange-100 border-orange-500 text-orange-700' : ''}`}
+                                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                                    isSelected 
+                                      ? 'bg-orange-50 border-orange-500 text-orange-700' 
+                                      : 'bg-gray-50 border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                                  }`}
                                   data-testid={`quick-reply-${idx}`}
                                 >
-                                  <div className={`w-4 h-4 border rounded mr-2 flex items-center justify-center ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-400'}`}>
+                                  <div className={`w-5 h-5 border-2 rounded flex items-center justify-center flex-shrink-0 ${
+                                    isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-400 bg-white'
+                                  }`}>
                                     {isSelected && <Check className="w-3 h-3 text-white" />}
                                   </div>
-                                  {reply.label}
+                                  <span className="text-left">{reply.label}</span>
                                 </button>
                               );
                             })}
                           </div>
                           {/* Done button */}
-                          {message.quick_replies.find(r => r.value === "env_done") && (
-                            <button
-                              onClick={() => handleQuickReply("env_done", "✓ Done Selecting", false)}
-                              className="action-button bg-orange-500 text-white hover:bg-orange-600"
-                              data-testid="quick-reply-done"
-                            >
-                              <Check className="w-4 h-4" />
-                              Done Selecting ({multiSelectChoices.length} selected)
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleQuickReply("env_done", "✓ Done Selecting", false)}
+                            className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                              multiSelectChoices.length > 0 
+                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                : 'bg-gray-200 text-gray-500'
+                            }`}
+                            data-testid="quick-reply-done"
+                          >
+                            <Check className="w-4 h-4" />
+                            {multiSelectChoices.length > 0 
+                              ? `Continue with ${multiSelectChoices.length} selection${multiSelectChoices.length > 1 ? 's' : ''}` 
+                              : 'Select at least one option'}
+                          </button>
                         </div>
                       ) : (
                         /* Regular buttons mode */
