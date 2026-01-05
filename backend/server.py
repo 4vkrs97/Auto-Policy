@@ -1633,13 +1633,14 @@ def update_state_from_input(state: dict, user_input: str, agent: str) -> dict:
                 items = [input_lower]
             
             for item in items:
-                if "urban" in item or item == "env_urban_city":
+                # Use exact matches to avoid partial matching issues
+                if item == "env_urban_city" or item == "urban_city" or "urban / city" in item:
                     if "urban_city" not in selections:
                         selections.append("urban_city")
-                elif "suburban" in item or item == "env_suburban":
+                if item == "env_suburban" or item == "suburban" or "suburban" in item:
                     if "suburban" not in selections:
                         selections.append("suburban")
-                elif "rural" in item or "highway" in item or item == "env_rural_highways":
+                if item == "env_rural_highways" or item == "rural_highways" or "rural" in item or "highway" in item:
                     if "rural_highways" not in selections:
                         selections.append("rural_highways")
             
