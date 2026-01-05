@@ -137,7 +137,7 @@ MOTORCYCLE_BRAND_LOGOS = {
     "Yamaha": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Yamaha_Motor_2025.svg/200px-Yamaha_Motor_2025.svg.png",
     "Kawasaki": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Kawasaki_Heavy_Industries_Logo.svg/200px-Kawasaki_Heavy_Industries_Logo.svg.png",
     "Suzuki": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Suzuki_logo_2025_%28vertical%29.svg/200px-Suzuki_logo_2025_%28vertical%29.svg.png",
-    "Ducati": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ducati_logo.svg/200px-Ducati_logo.svg.png",
+    "Ducati": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Ducati_red_logo.svg/200px-Ducati_red_logo.svg.png",
     "Harley-Davidson": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Harley-Davidson_logo.svg/200px-Harley-Davidson_logo.svg.png",
     "KTM": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/KTM-Logo.svg/200px-KTM-Logo.svg.png",
     "Honda": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/200px-Honda.svg.png",
