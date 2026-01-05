@@ -1120,10 +1120,12 @@ def get_fallback_response(state: dict, agent: str, user_message: str) -> dict:
     
     # Payment completed - generate policy
     if state.get("payment_completed") and not state.get("documents_ready"):
-        # Generate policy number in format AUT-YYYY-XXXXX
+        # Generate policy number based on vehicle type
+        # Format: MCI-YYYY-XXXXX for motorcycles, AUT-YYYY-XXXXX for cars
         current_year = datetime.now().year
         sequence_num = str(uuid.uuid4().int)[:5]  # 5 digit sequence
-        policy_num = f"AUT-{current_year}-{sequence_num}"
+        prefix = "MCI" if state.get("vehicle_type") == "motorcycle" else "AUT"
+        policy_num = f"{prefix}-{current_year}-{sequence_num}"
         
         now = datetime.now()
         start_date = now.strftime("%d %b %Y")
